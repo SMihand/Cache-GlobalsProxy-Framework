@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheExtremeProxy", "CacheExtremeProxy\CacheExtremeProxy.csproj", "{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaEditor", "MetaEditor\MetaEditor.csproj", "{678CB137-1F66-4A75-A59B-6AC3FACF9AC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCRUDexample", "SimpleCRUDexample\SimpleCRUDexample.csproj", "{7892AAE4-0F14-459D-91A9-7EEAEE203C67}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{678CB137-1F66-4A75-A59B-6AC3FACF9AC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{678CB137-1F66-4A75-A59B-6AC3FACF9AC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{678CB137-1F66-4A75-A59B-6AC3FACF9AC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{678CB137-1F66-4A75-A59B-6AC3FACF9AC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7892AAE4-0F14-459D-91A9-7EEAEE203C67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7892AAE4-0F14-459D-91A9-7EEAEE203C67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7892AAE4-0F14-459D-91A9-7EEAEE203C67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7892AAE4-0F14-459D-91A9-7EEAEE203C67}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

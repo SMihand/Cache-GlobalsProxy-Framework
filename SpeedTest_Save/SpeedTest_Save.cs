@@ -21,7 +21,7 @@ namespace EXTREMEAccessTESTS
     {
         private string _namespace = "USER";
         private string _user = "mihand";
-        private string _password = "19735";
+        private string _password = "_password";
         public Connection conn;
         WowsTestContext trueWowsTestContext;
         //

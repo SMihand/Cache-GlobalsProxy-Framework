@@ -431,6 +431,7 @@ namespace CacheEXTREME2.WMetaGlobal
         //
         public override ArrayList Serialize()
         {
+            return new ArrayList { base.SemanticName, "bytes", 0, maxSize };
             return new ArrayList { base.SemanticName, "bytes", 0, maxSize, GetDefaultValue() };
         }
     }

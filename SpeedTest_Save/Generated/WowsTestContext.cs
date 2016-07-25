@@ -28,7 +28,7 @@ namespace EXTREMEAccessTESTS.Generated
         public ProxyManager<shipinfoProxy, shipinfoProxyKey> shipinfoManager;
         
         public WowsTestContext(InterSystems.Globals.Connection conn , string global = "wowsTest") : 
-                base(conn, global, "wowsTestMeta",new MetaReader(conn))
+                base(conn, global, "wowsTestMeta")
         {
             this.classinfoManager = new ProxyManager<classinfoProxy, classinfoProxyKey>(base.entitiesMeta[typeof(classinfoProxy).Name], base.globalRef, base.structsManagers);
             this.stuffManager = new ProxyManager<stuffProxy, stuffProxyKey>(base.entitiesMeta[typeof(stuffProxy).Name], base.globalRef, base.structsManagers);

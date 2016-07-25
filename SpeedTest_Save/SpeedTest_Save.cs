@@ -39,12 +39,47 @@ namespace EXTREMEAccessTESTS
                     conn = ConnectionContext.GetConnection();
                     conn.Connect(_namespace, _user, _password);
                 }
+                initWowsTestMetaGlobal();
                 trueWowsTestContext = new WowsTestContext(conn);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+        private void initWowsTestMetaGlobal()
+        {
+            GlobalMeta gm = new GlobalMeta("wowsTest", "wowsTestMeta");
+            //structs zone
+            //  empty
+            //
+            //
+            //subscripts zone
+            gm.AddKeyMeta(new StringValMeta(new ArrayList { "shipclass","String",0,255,""}), "classinfo");
+            gm.AddKeyMeta(new IntValMeta(new ArrayList { "shiprank", "Integer", 0, 1000000, 5 }), "stuff");
+            gm.AddKeyMeta(new StringValMeta(new ArrayList { "shipname", "string", 0, 50, 5 }), "shipinfo");
+            //
+            //
+            //values zone
+            gm.SetValuesMeta(1, new List<ValueMeta>{
+                new IntValMeta(new ArrayList{"shipsCount","integer",0,1000,0})
+            });
+            gm.SetValuesMeta(2, new List<ValueMeta>{
+                new ListValMeta(new ArrayList{"workers","List",0,100}, new StringValMeta(new ArrayList{"","String",0,255,0}))
+                ,new ListValMeta(new ArrayList{"officers","List",0,100} ,new StringValMeta(new ArrayList{"","String",0,255,0}))
+                ,new IntValMeta(new ArrayList{"workerSalary","integer",1,2000,0})
+                ,new BytesValMeta(new ArrayList{"photo","bytes",200000})
+            });
+            gm.SetValuesMeta(3, new List<ValueMeta>{
+                new ListValMeta(new ArrayList{"captains","list",0,100},new StringValMeta(new ArrayList{"","String",0,255,0}))
+            });
+            //
+            //saving meta
+            MetaReaderWriter mr = new MetaReaderWriter(conn);
+            NodeReference nr = conn.CreateNodeReference(gm.GlobalMetaName);
+            nr.Kill();
+            //
+            mr.SaveMeta(gm);
         }
         //
         private void compareSaveSpeed(int count)

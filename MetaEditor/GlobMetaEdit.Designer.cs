@@ -49,6 +49,7 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.IndexEditor = new System.Windows.Forms.TabPage();
+            this.btnGenerateProxy = new System.Windows.Forms.Button();
             this.btnDeleteSub = new System.Windows.Forms.Button();
             this.btnDeleteVal = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
@@ -56,8 +57,9 @@
             this.StructElemListBox1 = new System.Windows.Forms.ListBox();
             this.label1 = new System.Windows.Forms.Label();
             this.btnEditStructVal = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
-            this.btnGenerateProxy = new System.Windows.Forms.Button();
+            this.btnAddValToStruct = new System.Windows.Forms.Button();
+            this.btnDeleteStruct = new System.Windows.Forms.Button();
+            this.btnDeleteStructVal = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.IndexEditor.SuspendLayout();
@@ -218,7 +220,7 @@
             this.AddStruct.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.AddStruct.Location = new System.Drawing.Point(359, 173);
             this.AddStruct.Name = "AddStruct";
-            this.AddStruct.Size = new System.Drawing.Size(120, 23);
+            this.AddStruct.Size = new System.Drawing.Size(67, 23);
             this.AddStruct.TabIndex = 22;
             this.AddStruct.Text = "AddStruct";
             this.AddStruct.UseVisualStyleBackColor = true;
@@ -287,6 +289,16 @@
             this.IndexEditor.Text = "IndexEditor";
             this.IndexEditor.UseVisualStyleBackColor = true;
             // 
+            // btnGenerateProxy
+            // 
+            this.btnGenerateProxy.Location = new System.Drawing.Point(417, 181);
+            this.btnGenerateProxy.Name = "btnGenerateProxy";
+            this.btnGenerateProxy.Size = new System.Drawing.Size(62, 51);
+            this.btnGenerateProxy.TabIndex = 26;
+            this.btnGenerateProxy.Text = "Generate Proxies";
+            this.btnGenerateProxy.UseVisualStyleBackColor = true;
+            this.btnGenerateProxy.Click += new System.EventHandler(this.btnGenerateProxy_Click);
+            // 
             // btnDeleteSub
             // 
             this.btnDeleteSub.Location = new System.Drawing.Point(77, 209);
@@ -318,10 +330,12 @@
             // 
             // StructEditor
             // 
+            this.StructEditor.Controls.Add(this.btnDeleteStructVal);
+            this.StructEditor.Controls.Add(this.btnDeleteStruct);
             this.StructEditor.Controls.Add(this.StructElemListBox1);
             this.StructEditor.Controls.Add(this.label1);
             this.StructEditor.Controls.Add(this.btnEditStructVal);
-            this.StructEditor.Controls.Add(this.button2);
+            this.StructEditor.Controls.Add(this.btnAddValToStruct);
             this.StructEditor.Controls.Add(this.StructListBox);
             this.StructEditor.Controls.Add(this.label4);
             this.StructEditor.Controls.Add(this.EditStruct);
@@ -355,34 +369,44 @@
             // btnEditStructVal
             // 
             this.btnEditStructVal.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnEditStructVal.Location = new System.Drawing.Point(213, 202);
+            this.btnEditStructVal.Location = new System.Drawing.Point(6, 202);
             this.btnEditStructVal.Name = "btnEditStructVal";
-            this.btnEditStructVal.Size = new System.Drawing.Size(140, 23);
+            this.btnEditStructVal.Size = new System.Drawing.Size(88, 23);
             this.btnEditStructVal.TabIndex = 25;
             this.btnEditStructVal.Text = "EditValue";
             this.btnEditStructVal.UseVisualStyleBackColor = true;
             this.btnEditStructVal.Click += new System.EventHandler(this.btnEditStructVal_Click);
             // 
-            // button2
+            // btnAddValToStruct
             // 
-            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(213, 173);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(140, 23);
-            this.button2.TabIndex = 26;
-            this.button2.Text = "AddValue";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.btnAddValToStruct.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAddValToStruct.Location = new System.Drawing.Point(6, 173);
+            this.btnAddValToStruct.Name = "btnAddValToStruct";
+            this.btnAddValToStruct.Size = new System.Drawing.Size(140, 23);
+            this.btnAddValToStruct.TabIndex = 26;
+            this.btnAddValToStruct.Text = "AddValue";
+            this.btnAddValToStruct.UseVisualStyleBackColor = true;
+            this.btnAddValToStruct.Click += new System.EventHandler(this.butAddValToStruct_Click);
             // 
-            // btnGenerateProxy
+            // btnDeleteStruct
             // 
-            this.btnGenerateProxy.Location = new System.Drawing.Point(417, 181);
-            this.btnGenerateProxy.Name = "btnGenerateProxy";
-            this.btnGenerateProxy.Size = new System.Drawing.Size(62, 51);
-            this.btnGenerateProxy.TabIndex = 26;
-            this.btnGenerateProxy.Text = "Generate Proxies";
-            this.btnGenerateProxy.UseVisualStyleBackColor = true;
-            this.btnGenerateProxy.Click += new System.EventHandler(this.btnGenerateProxy_Click);
+            this.btnDeleteStruct.Location = new System.Drawing.Point(433, 173);
+            this.btnDeleteStruct.Name = "btnDeleteStruct";
+            this.btnDeleteStruct.Size = new System.Drawing.Size(46, 23);
+            this.btnDeleteStruct.TabIndex = 27;
+            this.btnDeleteStruct.Text = "Delete";
+            this.btnDeleteStruct.UseVisualStyleBackColor = true;
+            this.btnDeleteStruct.Click += new System.EventHandler(this.btnDeleteStruct_Click);
+            // 
+            // btnDeleteStructVal
+            // 
+            this.btnDeleteStructVal.Location = new System.Drawing.Point(100, 202);
+            this.btnDeleteStructVal.Name = "btnDeleteStructVal";
+            this.btnDeleteStructVal.Size = new System.Drawing.Size(46, 23);
+            this.btnDeleteStructVal.TabIndex = 28;
+            this.btnDeleteStructVal.Text = "Delete";
+            this.btnDeleteStructVal.UseVisualStyleBackColor = true;
+            this.btnDeleteStructVal.Click += new System.EventHandler(this.btnDeleteStructVal_Click);
             // 
             // GlobMetaEdit
             // 
@@ -437,10 +461,12 @@
         private System.Windows.Forms.ListBox StructElemListBox1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnEditStructVal;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button btnAddValToStruct;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Button btnDeleteVal;
         private System.Windows.Forms.Button btnDeleteSub;
         private System.Windows.Forms.Button btnGenerateProxy;
+        private System.Windows.Forms.Button btnDeleteStruct;
+        private System.Windows.Forms.Button btnDeleteStructVal;
     }
 }

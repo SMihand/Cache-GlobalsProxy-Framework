@@ -75,6 +75,10 @@ namespace MetaCache_v3.helpclass
         private void GenerateProxyForm_Load(object sender, EventArgs e)
         {
             this.Text = "Generator for global: " + globalMeta.GlobalName;
+            string appPath = Application.ExecutablePath.Substring(0, Application.ExecutablePath.LastIndexOf("\\") + 1);
+            this.txtDirectoryPath.Text = appPath;
+            this.txtGlobalContextName.Text = globalMeta.GlobalSemantic + "Context";
+            this.txtNamespaceName.Text = globalMeta.GlobalSemantic+"Namespace";
         }
     }
 }

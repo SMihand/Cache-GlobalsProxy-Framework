@@ -61,10 +61,10 @@ namespace MetaCache_v3.EditForms
 
         private int getMetaType(ValueMeta vm)
         {
-            if (vm.GetType().Equals(typeof(StructValMeta))) { return 3; }
-            if (vm.GetType().Equals(typeof(DoubleValMeta))) { return 2; }
-            if (vm.GetType().Equals(typeof(IntValMeta))) { return 1; }
-            if (vm.GetType().Equals(typeof(StringValMeta))) { return 0; }
+            if (vm.ExtremeType == ExtremeTypes.EXTREME_STRUCT) { return 3; }
+            if (vm.ExtremeType == ExtremeTypes.EXTREME_DOUBLE) { return 2; }
+            if (vm.ExtremeType == ExtremeTypes.EXTREME_INT) { return 1; }
+            if (vm.ExtremeType == ExtremeTypes.EXTREME_STRING) { return 0; }
             return 99;
         }
         public string ReturnValuesDescription()

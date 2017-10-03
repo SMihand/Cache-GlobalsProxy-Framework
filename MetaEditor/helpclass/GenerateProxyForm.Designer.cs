@@ -43,8 +43,9 @@
             // 
             // btnCancel
             // 
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(289, 177);
+            this.btnCancel.Location = new System.Drawing.Point(285, 177);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(97, 23);
             this.btnCancel.TabIndex = 0;
@@ -53,22 +54,26 @@
             // 
             // txtDirectoryPath
             // 
+            this.txtDirectoryPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtDirectoryPath.Location = new System.Drawing.Point(14, 29);
             this.txtDirectoryPath.Name = "txtDirectoryPath";
-            this.txtDirectoryPath.Size = new System.Drawing.Size(269, 20);
+            this.txtDirectoryPath.Size = new System.Drawing.Size(265, 20);
             this.txtDirectoryPath.TabIndex = 1;
             // 
             // txtGlobalContextName
             // 
-            this.txtGlobalContextName.Location = new System.Drawing.Point(14, 82);
+            this.txtGlobalContextName.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtGlobalContextName.Location = new System.Drawing.Point(14, 88);
             this.txtGlobalContextName.Name = "txtGlobalContextName";
-            this.txtGlobalContextName.Size = new System.Drawing.Size(269, 20);
+            this.txtGlobalContextName.Size = new System.Drawing.Size(265, 20);
             this.txtGlobalContextName.TabIndex = 2;
             // 
             // btnGenerate
             // 
+            this.btnGenerate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnGenerate.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnGenerate.Location = new System.Drawing.Point(289, 127);
+            this.btnGenerate.Location = new System.Drawing.Point(285, 127);
             this.btnGenerate.Name = "btnGenerate";
             this.btnGenerate.Size = new System.Drawing.Size(97, 44);
             this.btnGenerate.TabIndex = 3;
@@ -78,7 +83,8 @@
             // 
             // btnBrowse
             // 
-            this.btnBrowse.Location = new System.Drawing.Point(289, 27);
+            this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnBrowse.Location = new System.Drawing.Point(285, 27);
             this.btnBrowse.Name = "btnBrowse";
             this.btnBrowse.Size = new System.Drawing.Size(95, 23);
             this.btnBrowse.TabIndex = 4;
@@ -88,6 +94,8 @@
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(14, 8);
             this.label1.Name = "label1";
@@ -97,8 +105,9 @@
             // 
             // label2
             // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(14, 66);
+            this.label2.Location = new System.Drawing.Point(14, 72);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(269, 13);
             this.label2.TabIndex = 6;
@@ -106,13 +115,17 @@
             // 
             // txtNamespaceName
             // 
+            this.txtNamespaceName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtNamespaceName.Location = new System.Drawing.Point(14, 140);
             this.txtNamespaceName.Name = "txtNamespaceName";
-            this.txtNamespaceName.Size = new System.Drawing.Size(269, 20);
+            this.txtNamespaceName.Size = new System.Drawing.Size(265, 20);
             this.txtNamespaceName.TabIndex = 7;
             // 
             // label3
             // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(14, 124);
             this.label3.Name = "label3";
@@ -124,7 +137,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(396, 212);
+            this.ClientSize = new System.Drawing.Size(392, 212);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.txtNamespaceName);
             this.Controls.Add(this.label2);
@@ -134,6 +147,8 @@
             this.Controls.Add(this.txtGlobalContextName);
             this.Controls.Add(this.txtDirectoryPath);
             this.Controls.Add(this.btnCancel);
+            this.MaximumSize = new System.Drawing.Size(1366, 250);
+            this.MinimumSize = new System.Drawing.Size(400, 250);
             this.Name = "GenerateProxyForm";
             this.Text = "GenerateProxyForm";
             this.Load += new System.EventHandler(this.GenerateProxyForm_Load);

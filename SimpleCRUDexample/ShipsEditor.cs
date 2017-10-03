@@ -14,7 +14,7 @@ using System.Threading;
 using CacheEXTREME2.WProxyGlobal;
 using System.Data;
 using System.Reflection;
-using WowsCrudNamespace;
+using NaviesNamespace;
 
 namespace SimpleCRUDexample
 {
@@ -38,42 +38,43 @@ namespace SimpleCRUDexample
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-            }
-            //Counting class ships count of manufacturers
-            //  reseting counters
-            List<ShipCounterProxy> shipsCounters = wowsContext.ShipCounterManager.GetAll();
-            for (int i = 0; i < shipsCounters.Count; i++)
-            {
-                shipsCounters[i].Count = 0;
-                wowsContext.ShipCounterManager.Save(shipsCounters[i]);
-            }
-            //  counting
-            ArrayList manufacturers = wowsContext.TrueGetKeys(new ArrayList(){""});
-            foreach (ArrayList manufacturer in manufacturers)
-            {
-                List<ShipInfoProxy> manufacturerShips = wowsContext.ShipInfoManager.GetByKeyMask(
-                    new ShipInfoProxyKey(
-                        (string)manufacturer[0]
-                        , new Classification("", null)
-                        , "")
-                );
-                //
-                foreach(ShipInfoProxy ship in manufacturerShips){
-                    ShipCounterProxy shipsCounter = wowsContext.ShipCounterManager.Get(
-                        new ShipCounterProxyKey(
-                            ship.Country
-                            , ship.Classification
-                        )
+
+                //Counting class ships count of manufacturers
+                //  reseting counters
+                List<ShipCounterProxy> shipsCounters = wowsContext.ShipCounterManager.GetAll();
+                for (int i = 0; i < shipsCounters.Count; i++)
+                {
+                    shipsCounters[i].Count = 0;
+                    wowsContext.ShipCounterManager.Save(shipsCounters[i]);
+                }
+                //  counting
+                ArrayList manufacturers = wowsContext.TrueGetKeys(new ArrayList(){""});
+                foreach (ArrayList manufacturer in manufacturers)
+                {
+                    List<ShipInfoProxy> manufacturerShips = wowsContext.ShipInfoManager.GetByKeyMask(
+                        new ShipInfoProxyKey(
+                            (string)manufacturer[0]
+                            , new Classification("", null)
+                            , "")
                     );
-                    if (shipsCounter != null)
-                    {
-                        shipsCounter.Count++;
-                        wowsContext.ShipCounterManager.Save(shipsCounter);
-                        continue;
-                    }
-                    if (shipsCounter == null) 
-                    {
-                        wowsContext.ShipCounterManager.Save(new ShipCounterProxy(ship.Country, ship.Classification, 1));
+                    //
+                    foreach(ShipInfoProxy ship in manufacturerShips){
+                        ShipCounterProxy shipsCounter = wowsContext.ShipCounterManager.Get(
+                            new ShipCounterProxyKey(
+                                ship.Country
+                                , ship.Classification
+                            )
+                        );
+                        if (shipsCounter != null)
+                        {
+                            shipsCounter.Count++;
+                            wowsContext.ShipCounterManager.Save(shipsCounter);
+                            continue;
+                        }
+                        if (shipsCounter == null) 
+                        {
+                            wowsContext.ShipCounterManager.Save(new ShipCounterProxy(ship.Country, ship.Classification, 1));
+                        }
                     }
                 }
             }
@@ -105,6 +106,7 @@ namespace SimpleCRUDexample
                     }
                 }
                 wowsContext.ShipInfoManager.Save(ship);
+                wowsContext.ShipInfoManager.SaveFaster(ship);
             }
             catch (Exception ex)
             {
@@ -137,8 +139,15 @@ namespace SimpleCRUDexample
         }
         private void btnGetAll_Click(object sender, EventArgs e)
         {
-            List<ShipInfoProxy> ships = wowsContext.ShipInfoManager.GetAll();
-            fillShipsGrid(ships);
+            try
+            {
+                List<ShipInfoProxy> ships = wowsContext.ShipInfoManager.GetAll();
+                fillShipsGrid(ships);
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
         private void btnKill_Click(object sender, EventArgs e)
         {

@@ -7,7 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using WowsCrudNamespace;
+using NaviesNamespace;
 
 namespace SimpleCRUDexample
 {
@@ -24,7 +24,7 @@ namespace SimpleCRUDexample
         static void Main()
         {
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            Application.SetCompatibleTextRenderingDefault(true);
             try
             {
                 conn = ConnectionContext.GetConnection();
@@ -41,25 +41,29 @@ namespace SimpleCRUDexample
         static void createWowsGlobalMeta()
         {
             GlobalMeta gm = new GlobalMeta("WowsCrud", "WowsCrudMeta");
+            gm.GlobalSemantic = "Navies";
             //
             //Step 1: 
             //  Structs meta declarations
             //
-            StructValMeta contactInfoStruct = new StructValMeta("Contact", "Contact"
-                , new List<ValueMeta>()
+            StructDefinition contactInfoStruct = new StructDefinition();
+            contactInfoStruct.StructTypeName = "Contact";
+            contactInfoStruct.elementsMeta = new List<ValueMeta>()
                 {
                     new StringValMeta(new ArrayList(){"Name","String",0,255,"Name"})
                     ,new IntValMeta(new ArrayList(){"Phone","Integer",1111111,9999999,1111111})
-                });
-            StructValMeta classificationStruct = new StructValMeta("Classification", "Classification"
-                , new List<ValueMeta>()
+                };
+
+            StructDefinition classificationStruct = new StructDefinition();
+            classificationStruct.StructTypeName = "Classification";
+            classificationStruct.elementsMeta = new List<ValueMeta>()
                 {
                     new StringValMeta(new ArrayList(){"ClassType","String",0,255,"ClassType"})
                     ,new IntValMeta(new ArrayList(){"Rank","Integer",0,10,0})
-                });
+                };
             //
             //Step 2:
-            //  Adding structs declarations to global meta
+            //  Adding structs definitions (type = StructDefinitions) to global meta
             //
             gm.AddStruct(contactInfoStruct);
             gm.AddStruct(classificationStruct);
@@ -68,22 +72,35 @@ namespace SimpleCRUDexample
             //  Indexes meta declarations
             //  (ArrayList fills according to metaglobal specification)
             gm.AddKeyMeta(new StringValMeta(new ArrayList() { "Country", "String", 0, 255, "Country" }), "Manufacturer");
-            gm.AddKeyMeta(classificationStruct, "ShipCounter");
+            gm.AddKeyMeta(new StructValMeta( "Classification", classificationStruct), "ShipCounter");
             gm.AddKeyMeta(new StringValMeta(new ArrayList() { "Name", "String", 0, 255, "ShipName" }), "ShipInfo");       
             //
             //Step 4:
             //  Values meta declarations
             //      first index Manufacturer values
-            gm.SetValuesMeta(1, new List<ValueMeta>(){
+            gm.AddValuesMeta(1, new List<ValueMeta>(){
                             new StructValMeta("Charge", contactInfoStruct)
-                            ,new ListValMeta(new ArrayList {"Ports","list", 0,1000}, contactInfoStruct)
-                            });
+                            ,new ListValMeta(new ArrayList {"Ports","list", 0,1000}, new StructValMeta("PortsListElem", contactInfoStruct))
+                            ,new ListValMeta(new ArrayList {"RecursiveList","list", 0,1000}, 
+                                new ListValMeta(
+                                    new ListValMeta(
+                                        new ListValMeta(
+                                            new ListValMeta(
+                                                //new ListValMeta(
+                                                    new ListValMeta(new ArrayList {"LastLevel","list", 0,1000}, new StructValMeta("PortsListElem", contactInfoStruct))
+                                                //)
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        });
             //      second index ClassInfo values
-            gm.SetValuesMeta(2, new List<ValueMeta>() { 
+            gm.AddValuesMeta(2, new List<ValueMeta>() { 
                             new IntValMeta(new ArrayList(){"Count","Integer", 0, 100500, 0})
                         });
             //      third index ShipInfo values
-            gm.SetValuesMeta(3, new List<ValueMeta>(){
+            gm.AddValuesMeta(3, new List<ValueMeta>(){
                             new StructValMeta("Captain", contactInfoStruct)
                             ,new IntValMeta(new ArrayList(){"StuffCount","Integer",1,5000,1})
                             ,new DoubleValMeta(new ArrayList(){"Efficienty","Double",0,1,0}) 
@@ -96,13 +113,16 @@ namespace SimpleCRUDexample
             //Saving meta
             MetaReaderWriter w = new MetaReaderWriter(conn);
             w.SaveMeta(gm);
+            GlobalMeta tryRead = w.GetMeta(gm.GlobalMetaName);
+            tryRead.GetLocalStructs()[1].elementsMeta[0] 
+                = new StringValMeta(new ArrayList() { "OLOLO", "String", 0, 255, "FUCKYEAH!" });
             //
             //Generating context file
             string appPath = Application.ExecutablePath.Substring(0, Application.ExecutablePath.LastIndexOf("\\") + 1);
             ContextGenerator gen = new ContextGenerator(gm, gm.GlobalName, gm.GlobalName + "Namespace", appPath + gm.GlobalName + "ContextBackup.cs");
             gen.GenerateCSharpCode();
-            
         }
+
         static void fillWowsGlobal()
         {
             WowsCrudContext wows = new WowsCrudContext(conn);
@@ -193,7 +213,33 @@ namespace SimpleCRUDexample
                 new Contact("Portsmun", 2223344)
                 , new Contact("Dartford",3334455) 
             };
-            wows.ManufacturerManager.Save(manufacter);
+            try
+            {
+                wows.ManufacturerManager.Validate = false;
+
+                manufacter.RecursiveList = new List<List<List<List<List<List<Contact>>>>>>();
+                manufacter.RecursiveList.Add(new List<List<List<List<List<Contact>>>>>());
+                manufacter.RecursiveList[0].Add(new List<List<List<List<Contact>>>>());
+                manufacter.RecursiveList[0][0].Add(new List<List<List<Contact>>>());
+                manufacter.RecursiveList[0][0][0].Add(new List<List<Contact>>());
+                manufacter.RecursiveList[0][0][0].Add(new List<List<Contact>>());
+                manufacter.RecursiveList[0][0][0][0].Add(new List<Contact>());
+                manufacter.RecursiveList[0][0][0][0][0].Add(new Contact("fork1", 1111111));
+                manufacter.RecursiveList[0][0][0][1].Add(new List<Contact>());
+                manufacter.RecursiveList[0][0][0][1].Add(new List<Contact>());
+                manufacter.RecursiveList[0][0][0][1][0].Add(new Contact("fork2_1", 2222111));
+                manufacter.RecursiveList[0][0][0][1][0].Add(new Contact("fork2_2", 2222222));
+                manufacter.RecursiveList[0][0][0][1].Add(new List<Contact>());
+                manufacter.RecursiveList[0][0][0][1][1].Add(new Contact("inreclist",6666666));
+                wows.ManufacturerManager.Save(manufacter);
+
+                wows.ManufacturerManager.Validate = true;
+                ManufacturerProxy readed = wows.ManufacturerManager.Get(manufacter);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }

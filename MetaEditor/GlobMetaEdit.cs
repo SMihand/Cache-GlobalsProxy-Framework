@@ -21,7 +21,6 @@ namespace MetaCache_v3
         GlobalMeta globalMeta;
         //MetaReaderWriter MR;
         CacheEXTREME2.WMetaGlobal.MetaReaderWriter MRW;
-        CacheEXTREME2.WMetaGlobal.MetaReader MR;
         List<string> keys = new List<string>();
         List<string> structs = new List<string>();
         bool _structEdit = false;
@@ -59,7 +58,6 @@ namespace MetaCache_v3
         private void GlobMetaEdit_Load(object sender, EventArgs e)
         {
             MRW = new MetaReaderWriter(_conn);
-            MR = new MetaReader(_conn);
             Text = _globName;
             // проверка на существование такого глобала, загрузка его
             if (_conn.CreateNodeReference(_globName).HasData())

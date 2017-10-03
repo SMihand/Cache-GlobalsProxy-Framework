@@ -54,7 +54,6 @@
     <Compile Include="WDirectGlobal\TrueNodeReference.cs" />
     <Compile Include="WDirectGlobal\TrueValueList.cs" />
     <Compile Include="WMetaGlobal\GlobalMeta.cs" />
-    <Compile Include="WMetaGlobal\MetaReader.cs" />
     <Compile Include="WMetaGlobal\MetaReaderWriter.cs" />
     <Compile Include="WMetaGlobal\TypesMeta.cs" />
     <Compile Include="WProxyGlobal\CacheEXTREMEcontext.cs" />

@@ -89,7 +89,7 @@ namespace CacheEXTREME2.WMetaGlobal
                 getValuesMeta(gmToReturn);
                 return gmToReturn;
             }
-            throw new UnsuportedMetaGlobalExceptionA2(metaGlobalName);
+            throw new UnsuportedMetaGlobalException(metaGlobalName);
         }
         //
         private void getGLobalInfo(GlobalMeta gm)

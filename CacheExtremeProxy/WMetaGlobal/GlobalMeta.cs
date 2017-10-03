@@ -1,18 +1,16 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace CacheEXTREME2.WMetaGlobal
 {
-
     public class GlobalMeta
     {
-        private string globalMetaName;
-        public string GlobalMetaName { get { return globalMetaName; } }
+        public string GlobalMetaName;
+        public string GlobalName;
+        public string GlobalSemantic;
 
-        private string globalName;
-        public string GlobalName { get { return globalName; } }
-
+        //<string (is semantic of key), IKeyValidator (is )
         private List<IKeyValidator> keys;
         public int KeysCount
         {
@@ -20,48 +18,80 @@ namespace CacheEXTREME2.WMetaGlobal
         }
 
         private List<KeyValuePair<string, List<ValueMeta>>> nodesMeta;
-        public KeyValuePair<string, List<ValueMeta>> this[int subsCount] { get { return GetEntityValuesMeta(subsCount); } }
+        public int NodesWithMetaCount { get { return nodesMeta.Count; } }
 
-        private Dictionary<string,StructValMeta> localStructs;
+        //real sequence of meta in global
+        //INDEX corresponds to subs count to acces its nodes
+        //KEY corresponds to sematic of the holded entity
+        //VALUE is the actualy node meta 
+        public ValueMeta this[int subscriptIndexToGet] {
+            get { return (ValueMeta)this.keys[subscriptIndexToGet]; } 
+            set { } 
+        }
+        public ValueMeta this[int nodeIndexToGet, int valueIndexToGet] { 
+            get { return nodesMeta[nodeIndexToGet].Value[valueIndexToGet]; }
+            set { }
+        }
+
+        private Dictionary<string, StructDefinition> localStructs;
+        private Queue<string> structsSequence = new Queue<string>();
+        public Queue<string> StructSequence { get { return new Queue<string>(structsSequence); } }
         //
         public GlobalMeta(string globalMetaName, List<IKeyValidator> keysMeta, List<KeyValuePair<string, List<ValueMeta>>> nodesMeta)
         {
-            this.globalMetaName = globalMetaName;
+            this.GlobalMetaName = globalMetaName;
             this.keys = new List<IKeyValidator>(keysMeta);
             this.nodesMeta = new List<KeyValuePair<string, List<ValueMeta>>>(nodesMeta);
-            this.localStructs = new Dictionary<string, StructValMeta>();
+            this.localStructs = new Dictionary<string, StructDefinition>();
         }
         public GlobalMeta(string globalMetaName, string globalName, List<IKeyValidator> keysMeta, List<KeyValuePair<string, List<ValueMeta>>> nodesMeta)
             : this(globalMetaName, keysMeta, nodesMeta)
         {
-            this.globalName = globalName;
+            this.GlobalName = globalName;
         }
         public GlobalMeta(string dataGlobalName, string metaGlobalName)
         {
-            this.globalName = dataGlobalName;
-            this.globalMetaName = metaGlobalName;
+            this.GlobalName = dataGlobalName;
+            this.GlobalMetaName = metaGlobalName;
             this.keys = new List<IKeyValidator>();
             this.nodesMeta = new List<KeyValuePair<string, List<ValueMeta>>>();
-            this.localStructs = new Dictionary<string, StructValMeta>();
+            this.localStructs = new Dictionary<string, StructDefinition>();
+        }
+        public GlobalMeta()
+        {
+            this.localStructs = new Dictionary<string, StructDefinition>();
+            this.nodesMeta = new List<KeyValuePair<string, List<ValueMeta>>>();
+            this.keys = new List<IKeyValidator>();
+        }
+        //
+        public KeyValuePair<string, List<ValueMeta>> GetNodeMeta(int nodeIndex)
+        {
+            if (nodeIndex >= 0 && nodeIndex < nodesMeta.Count)
+            {
+                return nodesMeta[nodeIndex];
+            }
+            throw new IndexOutOfRangeException("Index expected in range [0, " + (nodesMeta.Count - 1) + "] entered " + nodeIndex);
         }
         //
         public void ResetRestrictionsOnly(GlobalMeta resetFrom)
         {
-            string curentSemantic="";
-            string sampleSemantic=""; 
+            //debugging information
+            string curentSemantic = "";
+            string sampleSemantic = "";
+            //
             try
             {
-                foreach(string key in resetFrom.localStructs.Keys)
+                foreach (string key in resetFrom.localStructs.Keys)
                 {
                     sampleSemantic = key;
                     curentSemantic = "sample structure is not found";
                     try
                     {
-                        localStructs[key].SetRestrictionsMeta(resetFrom.localStructs[key]);
+                        throw new NotImplementedException("To Implement ResetRestrictionsOnly in GlobalMeta");
                     }
                     catch (Exception ex)
                     {
-                        throw new FormatException(" curent: " + curentSemantic + "\n sample: " + sampleSemantic +"\n"+ex.Message);
+                        throw new FormatException(" curent: " + curentSemantic + "\n sample: " + sampleSemantic + "\n" + ex.Message);
                     }
                 }
                 for (int i = 0; i < resetFrom.keys.Count; i++)
@@ -102,133 +132,330 @@ namespace CacheEXTREME2.WMetaGlobal
                         nodesMeta[i].Value[j].SetRestrictionsMeta(resetFrom.nodesMeta[i].Value[j]);
                     }
                 }
-                
+
             }
             catch (Exception ex)
             {
                 throw new ArgumentException("mismatch between curent structure or/and semantic of global and sample\n" + ex.Message, "resetFrom", ex);
             }
         }
-        //
-        //Editing
-        //  keys works:
-        public void AddKeyMeta(IKeyValidator key, string className = "null")
+
+
+        //  STRUCT WORKS:
+        public void AddStruct(StructDefinition structDef)
+        {
+            if (!localStructs.ContainsKey(structDef.StructTypeName))
+            {
+                for (int i = 0; i < structDef.elementsMeta.Count; i++)
+                {
+                    switch (structDef.elementsMeta[i].ExtremeType)
+                    {
+                        case ExtremeTypes.EXTREME_STRUCT:
+                            if (localStructs.ContainsKey((structDef.elementsMeta[i] as StructValMeta).structDefinition.StructTypeName))
+                            {
+                                (structDef.elementsMeta[i] as StructValMeta).structDefinition = localStructs[(structDef.elementsMeta[i] as StructValMeta).structDefinition.StructTypeName];
+                                continue;
+                            }
+                            throw new ArgumentException("Struct type not found: '" + (structDef.elementsMeta[i] as StructValMeta).structDefinition.StructTypeName + "'!");
+                        case ExtremeTypes.EXTREME_LIST:
+                            ValueMeta listElem = getListElemInRecursiveList(structDef.elementsMeta[i] as ListValMeta);
+                            switch (listElem.ExtremeType)
+                            {
+                                case ExtremeTypes.EXTREME_STRUCT:
+                                    if (localStructs.ContainsKey((structDef.elementsMeta[i] as StructValMeta).structDefinition.StructTypeName))
+                                    {
+                                        (structDef.elementsMeta[i] as StructValMeta).structDefinition = localStructs[(structDef.elementsMeta[i] as StructValMeta).structDefinition.StructTypeName];
+                                    }
+                                    else
+                                    {
+                                        throw new ArgumentException("This global meta has no struct: " + (listElem as StructValMeta).structDefinition.StructTypeName);
+                                    }
+                                    break;
+                                default:
+                                    continue;
+                            }
+                            break;
+                    }
+                }
+                //
+                structsSequence.Enqueue(structDef.StructTypeName);
+                localStructs.Add(structDef.StructTypeName, structDef);
+            }
+        }
+
+        public void EditStruct(string structTypeName, StructDefinition structDef)
+        {
+            foreach (ValueMeta valMeta in structDef.elementsMeta)
+            {
+                switch (valMeta.ExtremeType)
+                {
+                    case ExtremeTypes.EXTREME_STRUCT:
+                        if (!localStructs.ContainsKey((valMeta as StructValMeta).structDefinition.StructTypeName))
+                        {
+                            throw new ArgumentException("While editing struct. has no struct: " + structDef.StructTypeName);
+                        }
+                        break;
+                }
+            }
+            localStructs[structTypeName] = structDef;
+        }
+
+        public void RemoveStruct(string structTypeName)
+        {
+            if(localStructs.ContainsKey(structTypeName)){
+                localStructs.Remove(structTypeName);
+                while (keys.Exists(e => ((ValueMeta)e).GetCSharpTypeName() == structTypeName))
+                {
+                    int ki = keys.FindIndex(e => ((ValueMeta)e).GetCSharpTypeName() == structTypeName);
+                    keys.RemoveAt(ki);
+                    nodesMeta.RemoveAt(ki);
+                }
+                for (int i = 0; i < nodesMeta.Count; i++)
+                {
+                    nodesMeta[i].Value.RemoveAll(e => ((ValueMeta)e).GetCSharpTypeName() == structTypeName);
+                }
+            }
+        }
+
+        public StructDefinition GetStructDefinition(string structTypeName)
+        {
+            return localStructs[structTypeName];
+        }
+
+        private void deleteStructEntries(string structTypeName)
+        {
+            if (localStructs.ContainsKey(structTypeName))
+            {
+                localStructs.Remove(structTypeName);
+            }
+            foreach (KeyValuePair<string, StructDefinition> keyStruct in localStructs)
+            {
+                for (int i = 0; i < keyStruct.Value.elementsMeta.Count; i++)
+                {
+                    if (keyStruct.Value.elementsMeta[i].GetCSharpTypeName().Equals(structTypeName))
+                    {
+                        keyStruct.Value.elementsMeta.RemoveAt(i);
+                    }
+                }
+            }
+            for (int i = 0; i < nodesMeta.Count; i++)
+            {
+                for (int j = 0; j < nodesMeta[i].Value.Count; j++)
+                {
+                    if (nodesMeta[i].Value[j].GetCSharpTypeName().Equals(structTypeName))
+                    {
+                        nodesMeta[i].Value.RemoveAt(j);
+                    }
+                }
+            }
+            for (int i = 0; i < keys.Count; i++)
+            {
+                if ((keys[i] as ValueMeta).GetCSharpTypeName().Equals(structTypeName))
+                {
+                    this.RemoveKey(i);
+                }
+            }
+        }
+
+
+        //  KEYS WORKS:
+        public void AddKeyMeta(ValueMeta key)
         {
             if (!this.keys.Exists(e => (key as ValueMeta).SemanticName == (e as ValueMeta).SemanticName))
             {
                 //костыль
+                Boolean isAvailable = true;
                 if (((ValueMeta)key).ExtremeType == ExtremeTypes.EXTREME_STRUCT)
                 {
-                    if (this.localStructs.ContainsKey((key as StructValMeta).StructTypeName))
+                    isAvailableAsKeyStruct(((StructValMeta)key).structDefinition, ref isAvailable);
+                    if (this.localStructs.ContainsKey((key as StructValMeta).structDefinition.StructTypeName))
                     {
-                        this.keys.Add(new StructValMeta((key as ValueMeta).SemanticName, localStructs[(key as StructValMeta).StructTypeName]));
+                        this.keys.Add(new StructValMeta((key as ValueMeta).SemanticName, localStructs[(key as StructValMeta).structDefinition.StructTypeName]));
                     }
                     else
                     {
-                        throw new ArgumentException("Struct type not found: '" + (key as StructValMeta).StructTypeName + "'!");
+                        throw new ArgumentException("Struct type not found: '" + (key as StructValMeta).structDefinition.StructTypeName + "'!");
                     }
                 }
                 else
                 {
-                    this.keys.Add(key);
+                    this.keys.Add((IKeyValidator)key);
                 }
-                nodesMeta.Add(new KeyValuePair<string, List<ValueMeta>>(className, new List<ValueMeta>()));
+                nodesMeta.Add(new KeyValuePair<string, List<ValueMeta>>("", new List<ValueMeta>()));
+
+            }
+        }
+        public void AddKeyMeta(ValueMeta key, string entityName)
+        {
+            if (!this.keys.Exists(e => (key as ValueMeta).SemanticName == (e as ValueMeta).SemanticName))
+            {
+                //костыль
+                Boolean isAvailable = true;
+                if (key.ExtremeType == ExtremeTypes.EXTREME_STRUCT)
+                {
+                    isAvailableAsKeyStruct(((StructValMeta)key).structDefinition, ref isAvailable);
+                    if (isAvailable)
+                    {
+                        if (this.localStructs.ContainsKey((key as StructValMeta).structDefinition.StructTypeName))
+                        {
+                            StructValMeta toSet = (key as StructValMeta);
+                            StructValMeta newKey = new StructValMeta(toSet.SemanticName, this.localStructs[toSet.structDefinition.StructTypeName]);
+                            this.keys.Add((IKeyValidator)newKey);
+                        }
+                        else
+                        {
+                            throw new ArgumentException("Struct type not found: '" + (key as StructValMeta).structDefinition.StructTypeName + "'!");
+                        }
+                    }
+                }
+                else
+                {
+                    this.keys.Add((IKeyValidator)key);
+                }
+                nodesMeta.Add(new KeyValuePair<string, List<ValueMeta>>(entityName, new List<ValueMeta>()));
+            }
+        }
+        private void isAvailableAsKeyStruct(StructDefinition definition, ref Boolean isAvailable)
+        {
+            foreach (ValueMeta valMeta in definition.elementsMeta)
+            {
+                switch (valMeta.ExtremeType)
+                {
+                    case ExtremeTypes.EXTREME_STRUCT:
+                        isAvailableAsKeyStruct(((StructValMeta)valMeta).structDefinition, ref isAvailable);
+                        break;
+                    case ExtremeTypes.EXTREME_BYTES:
+                        isAvailable = false;
+                        break;
+                    case ExtremeTypes.EXTREME_LIST:
+                        isAvailable = false;
+                        break;
+                }
             }
         }
 
-        public void ResetKeyMeta(ValueMeta oldKey, ValueMeta newKey, string className)
+
+        public void ResetKeyMeta(ValueMeta oldKey, ValueMeta newKey, string entitySemantic)
         {
-            List<ValueMeta> keysMeta = this.GetKeysMeta();
-            int oldIdx = keysMeta.FindIndex(e => e.SemanticName == oldKey.SemanticName);
-            keys[oldIdx] = (IKeyValidator)newKey;
-            KeyValuePair<string, List<ValueMeta>> newNode 
-                = new KeyValuePair<string,List<ValueMeta>>(className,nodesMeta[0].Value);
-            nodesMeta[oldIdx] = newNode;
+            int oldIdx = this.GetKeysMeta(this.KeysCount).FindIndex(e => e.SemanticName == oldKey.SemanticName);
+
+            if (oldIdx >= 0 && oldIdx < KeysCount)
+            {
+                keys[oldIdx] = (IKeyValidator)newKey;
+                KeyValuePair <string, List<ValueMeta>> newNode
+                    = new KeyValuePair<string, List<ValueMeta>>(entitySemantic, nodesMeta[0].Value);
+                nodesMeta[oldIdx] = newNode;
+                return;
+            }
+            throw new DataMisalignedException("reseting key error:" + oldKey.SemanticName + " index does not exist.");
         }
 
         public void RemoveKey(int keyIndex)
         {
-            if (this.keys.Count > 0)
+            if (this.keys.Count > 0 && keyIndex >= 0 && keyIndex < KeysCount)
             {
                 this.keys.RemoveAt(keyIndex);
                 this.nodesMeta.RemoveAt(keyIndex);
             }
         }
-        
-        //  structs works
-        public void AddStruct(string structName, StructValMeta structMeta)
+
+
+        //  NODES WORKS
+        public void AddValueMeta(int keyIndex, ValueMeta valueMeta)
         {
-            if (!localStructs.ContainsKey(structName))
+            if (keyIndex >= 0 && keyIndex < KeysCount)
             {
-                structMeta.StructId = localStructs.Count;//Trying to normilize structs Identifiers
-                //
-                for (int i = 0; i < structMeta.elementsMeta.Count; i++)
+                switch (valueMeta.ExtremeType)
                 {
-                    if (structMeta.elementsMeta[i].ExtremeType == ExtremeTypes.EXTREME_STRUCT)
-                    {
-                        if (localStructs.ContainsKey((structMeta.elementsMeta[i] as StructValMeta).StructTypeName))
+                    case ExtremeTypes.EXTREME_STRUCT:
+                        try
                         {
-                            (structMeta.elementsMeta[i] as StructValMeta).elementsMeta = localStructs[(structMeta.elementsMeta[i] as StructValMeta).StructTypeName].elementsMeta;
-                            continue;
+                            nodesMeta[keyIndex].Value.Add(valueMeta);
+                            if (localStructs.ContainsKey((valueMeta as StructValMeta).structDefinition.StructTypeName))
+                            {
+                                StructValMeta newStructVal = new StructValMeta(valueMeta.SemanticName, (valueMeta as StructValMeta).structDefinition);
+                                nodesMeta[keyIndex].Value.Add(newStructVal);
+                            }
                         }
-                        throw new ArgumentException("Struct type not found: '" + (structMeta.elementsMeta[i] as StructValMeta).StructTypeName + "'!");
-                    }
+                        catch
+                        {
+                            throw new MissingMemberException(this.GlobalMetaName + " has no declaration of struct: " + valueMeta.GetCSharpTypeName());
+                        }
+                        break;
+                    case ExtremeTypes.EXTREME_LIST:
+                        ValueMeta listElem = getListElemInRecursiveList(valueMeta as ListValMeta);
+                        if (listElem.ExtremeType == ExtremeTypes.EXTREME_STRUCT)
+                        {
+                            if (!localStructs.ContainsKey((listElem as StructValMeta).structDefinition.StructTypeName))
+                            {
+                                throw new MissingMemberException(this.GlobalMetaName + " has no declaration of struct: " + valueMeta.GetCSharpTypeName());
+                            }
+                        }
+                        break;
+                    default:
+                        nodesMeta[keyIndex].Value.Add(valueMeta);
+                        break;
                 }
-                //
-                localStructs.Add(structName, structMeta);
+                return;
             }
+            throw new ArgumentException("You entered index number: " + keyIndex + " while this meta has: " + this.keys.Count + " indicies");
         }
-        public void AddStruct(StructValMeta structMeta)
+        public void DeleteValueMeta(int forIndex, int valIndex)
         {
-            AddStruct(structMeta.StructTypeName, structMeta);
-        }
-
-        /// <summary>
-        /// NOT TESTED!
-        /// i dont know how will result corelate with all globalMeta work
-        /// </summary>
-        /// <param name="oldTypeName"></param>
-        /// <param name="newTypeName"></param>
-        public void RenameStruct(string oldTypeName, string newTypeName)
-        {
-            StructValMeta old = localStructs[oldTypeName];
-            localStructs.Remove(old.StructTypeName);
-            old.StructTypeName = newTypeName;
-            localStructs.Add(newTypeName, old);
-        }
-
-        public void EditStruct(string structTypeName, StructValMeta structMeta)
-        {
-            localStructs[structTypeName] = new StructValMeta(structTypeName, structMeta);
-        }
-
-        /// <summary>
-        /// NEED TO REWRITE THIS SHIT!
-        /// need to recoursivily delete all struct invasions!
-        /// </summary>
-        /// <param name="structTypeName"></param>
-        public void RemoveStruct(string structTypeName)
-        {
-            localStructs.Remove(structTypeName);
-            while (keys.Exists(e => ((ValueMeta)e).GetCSharpTypeName() == structTypeName))
+            if (forIndex >= 0 && forIndex < KeysCount)
             {
-                int ki = keys.FindIndex(e => ((ValueMeta)e).GetCSharpTypeName() == structTypeName);
-                keys.RemoveAt(ki);
-                nodesMeta.RemoveAt(ki);
+                if (valIndex >= 0 && valIndex < nodesMeta[forIndex].Value.Count)
+                {
+                    nodesMeta[forIndex].Value.RemoveAt(valIndex);
+                }
+                return;
             }
-            for (int i = 0; i < nodesMeta.Count; i++)
-            {
-                nodesMeta[i].Value.RemoveAll(e => ((ValueMeta)e).GetCSharpTypeName() == structTypeName);
-            }
+            throw new ArgumentException("You entered index number: " + forIndex + " while this meta has: " + this.keys.Count + " indicies");
         }
 
-        //  nodes works
-        public void SetValuesMeta(int forIndex, List<ValueMeta> valuesMeta)
+        public void AddValuesMeta(int forIndex, List<ValueMeta> valuesMeta)
         {
             if (forIndex <= KeysCount)
             {
                 nodesMeta[forIndex - 1].Value.Clear();
                 nodesMeta[forIndex - 1].Value.AddRange(valuesMeta);
+                for (int i = 0; i < nodesMeta[forIndex - 1].Value.Count; i++)
+                {
+                    switch (nodesMeta[forIndex - 1].Value[i].ExtremeType)
+                    {
+                        case ExtremeTypes.EXTREME_STRUCT:
+                            if (localStructs.ContainsKey((valuesMeta[i] as StructValMeta).structDefinition.StructTypeName))
+                            {
+                                StructValMeta structMeta = new StructValMeta(valuesMeta[i].SemanticName, localStructs[(valuesMeta[i] as StructValMeta).structDefinition.StructTypeName]);
+                                nodesMeta[forIndex - 1].Value[i] = structMeta;
+                            }
+                            else
+                            {
+                                throw new ArgumentException("This global meta has no struct: " + (valuesMeta[i] as StructValMeta).structDefinition.StructTypeName);
+                            }
+                            break;
+                        case ExtremeTypes.EXTREME_LIST:
+                            ValueMeta listElem = getListElemInRecursiveList(nodesMeta[forIndex - 1].Value[i] as ListValMeta);
+                            switch (listElem.ExtremeType)
+                            {
+                                case ExtremeTypes.EXTREME_STRUCT:
+                                    StructValMeta structInListMeta = (listElem as StructValMeta);
+                                    if (localStructs.ContainsKey(structInListMeta.structDefinition.StructTypeName))
+                                    {
+                                        structInListMeta.structDefinition = localStructs[structInListMeta.structDefinition.StructTypeName];
+                                    }
+                                    else
+                                    {
+                                        nodesMeta.RemoveAt(forIndex - 1);
+                                        throw new Exception("Adding in list StructValMeta failed: " + structInListMeta.structDefinition.StructTypeName + " not founded");
+                                    }
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                    }
+                }
             }
         }
         public void SetValuesMeta(int forIndex, List<ValueMeta> valuesMeta, string nodeSemantic)
@@ -236,156 +463,190 @@ namespace CacheEXTREME2.WMetaGlobal
             if (forIndex <= KeysCount)
             {
                 nodesMeta[forIndex - 1] = new KeyValuePair<string, List<ValueMeta>>(nodeSemantic, valuesMeta);
-            }
-        }
-        //
-        //Getters
-        public List<IKeyValidator> GetKeysValidator(int keysCount = 0) 
-        { 
-            return (keysCount==0)?keys:keys.GetRange(0,keysCount); 
-        }
-
-        public List<ValueMeta> GetKeysMeta(int keysCount = 0)
-        {
-            List<ValueMeta> keysMeta = new List<ValueMeta>();
-            for (int i = 0; i < keys.Count; i++)
-            {
-                switch(((ValueMeta)keys[i]).ExtremeType){
-                    case ExtremeTypes.EXTREME_DOUBLE:
+                for (int i = 0; i < nodesMeta[forIndex - 1].Value.Count; i++)
+                {
+                    switch (nodesMeta[forIndex - 1].Value[i].ExtremeType)
                     {
-                        keysMeta.Add((DoubleValMeta)keys[i]);
-                        break;
-                    }
-                        case ExtremeTypes.EXTREME_INT:
-                    {
-                        keysMeta.Add((IntValMeta)keys[i]);
-                        break;
-                    }
-                        case ExtremeTypes.EXTREME_STRING:
-                    {
-                        keysMeta.Add((StringValMeta)keys[i]);
-                        break;
-                    }
                         case ExtremeTypes.EXTREME_STRUCT:
-                    {
-                        keysMeta.Add(new StructValMeta(((ValueMeta)keys[i]).SemanticName,localStructs[((StructValMeta)keys[i]).StructTypeName]));
-                        break;
+                            StructValMeta structMeta = new StructValMeta(valuesMeta[i].SemanticName, localStructs[(valuesMeta[i] as StructValMeta).structDefinition.StructTypeName]);
+                            nodesMeta[forIndex - 1].Value[i] = structMeta;
+                            break;
+                        case ExtremeTypes.EXTREME_LIST:
+                            ValueMeta listElem = getListElemInRecursiveList(nodesMeta[forIndex - 1].Value[i] as ListValMeta);
+                            switch (listElem.ExtremeType)
+                            {
+                                case ExtremeTypes.EXTREME_STRUCT:
+                                    StructValMeta structInListMeta = listElem as StructValMeta;
+                                    if (localStructs.ContainsKey(structInListMeta.structDefinition.StructTypeName))
+                                    {
+                                        structInListMeta.structDefinition = localStructs[structInListMeta.structDefinition.StructTypeName];
+                                    }
+                                    else
+                                    {
+                                        nodesMeta.RemoveAt(forIndex - 1);
+                                        throw new Exception("Adding in list StructValMeta failed: " + structInListMeta.structDefinition.StructTypeName + " not founded");
+                                    }
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        //need to recursively check structs in lists/lists of lists.../
+                        //atention! stackoverflow exception
+                        //need to set limit of recursive level
                     }
                 }
             }
-            return (keysCount==0)?keysMeta:keysMeta.GetRange(0,keysCount);
         }
-
-        public KeyValuePair<string, List<ValueMeta>> GetEntityValuesMeta(int indexCount)
+        public void EditValueMeta(int forIndex, int valIndex, ValueMeta valueMeta)
         {
-            KeyValuePair<string, List<ValueMeta>> entityValuesMeta =  nodesMeta[indexCount - 1];
-            for (int i = 0; i < entityValuesMeta.Value.Count; i++)
+            if(forIndex < 0)
             {
-                completeStructMeta(entityValuesMeta.Value[i]);
+                throw new IndexOutOfRangeException("out while editing valuemeta");
             }
-            return entityValuesMeta;
+            Exception ex = new Exception("While editing node " + nodesMeta[forIndex].Key
+                                + " ; value:" + nodesMeta[forIndex].Value[valIndex].SemanticName);
+            switch (valueMeta.ExtremeType)
+            {
+                case ExtremeTypes.EXTREME_STRUCT:
+                    if (!isStructExist(valueMeta))
+                    {
+                        throw ex;
+                    }
+                    break;
+                case ExtremeTypes.EXTREME_LIST:
+                    ValueMeta listElemMeta = getListElemInRecursiveList(valueMeta as ListValMeta);
+                    if(listElemMeta.ExtremeType == ExtremeTypes.EXTREME_STRUCT)
+                    {
+                        if (!isStructExist(listElemMeta))
+                        {
+                            throw ex;
+                        }
+                    }
+                    break;
+            }
+            nodesMeta[forIndex].Value[valIndex] = valueMeta;
+        }
+        public bool isStructExist(ValueMeta valueMeta)
+        {
+            if (localStructs != null)
+            {
+                return localStructs.ContainsKey((valueMeta as StructValMeta).structDefinition.StructTypeName);
+            }
+            else
+            {
+                throw new Exception("Strange.. While checking struct definition existing");
+            }
+        }
+        public bool isStructExist(StructValMeta structValMeta)
+        {
+            return isStructExist(structValMeta as ValueMeta);
+        }
+        //
+        public List<ValueMeta> GetKeysMeta(int keysCount)
+        {
+            if (keysCount > 0 && keysCount <= this.KeysCount)
+            {
+                List<ValueMeta> keysMetaToReturn = new List<ValueMeta>();
+                for (int i = 0; i < keysCount; i++)
+                {
+                    switch (((ValueMeta)keys[i]).ExtremeType)
+                    {
+                        case ExtremeTypes.EXTREME_DOUBLE:
+                            {
+                                keysMetaToReturn.Add((DoubleValMeta)keys[i]);
+                                break;
+                            }
+                        case ExtremeTypes.EXTREME_INT:
+                            {
+                                keysMetaToReturn.Add((IntValMeta)keys[i]);
+                                break;
+                            }
+                        case ExtremeTypes.EXTREME_STRING:
+                            {
+                                keysMetaToReturn.Add((StringValMeta)keys[i]);
+                                break;
+                            }
+                        case ExtremeTypes.EXTREME_STRUCT:
+                            {
+                                keysMetaToReturn.Add((StructValMeta)keys[i]);
+                                break;
+                            }
+                    }
+                }
+                return (keysCount == 0) ? keysMetaToReturn : keysMetaToReturn.GetRange(0, keysCount);
+            }
+            throw new Exception("keys count mismatch");
         }
 
-        public List<StructValMeta> GetLocalStructs()
+        public List<StructDefinition> GetLocalStructs()
         {
-            List<StructValMeta> structsMeta = new List<StructValMeta>(localStructs.Count);
+            List<StructDefinition> structsMetaToReturn = new List<StructDefinition>(localStructs.Count);
             foreach (var structMeta in localStructs)
             {
-                structsMeta.Add(structMeta.Value);
+                structsMetaToReturn.Add(structMeta.Value);
             }
-            return structsMeta;
+            return structsMetaToReturn;
         }
 
-        public StructValMeta GetStruct(string structTypeName)
-        {
-            return localStructs[structTypeName];
-        }
 
-        //
-        private void completeStructMeta(ValueMeta valueMeta)
-        {
-            switch(valueMeta.ExtremeType){
-                case ExtremeTypes.EXTREME_STRUCT:
-                {
-                    StructValMeta structMeta = (valueMeta as StructValMeta);
-                    structMeta.elementsMeta = new List<ValueMeta>(localStructs[structMeta.StructTypeName].elementsMeta);
-                    for (int i = 0; i < structMeta.elementsMeta.Count; i++)
-                    {
-                        //trying to normilize structs id
-                        structMeta.StructId = localStructs[structMeta.StructTypeName].StructId;
-                        //
-                        completeStructMeta(structMeta.elementsMeta[i]);
-                    }
-                    return;
-                }
-                case ExtremeTypes.EXTREME_LIST:
-                {
-                    ListValMeta listMeta = (valueMeta as ListValMeta);
-                    completeStructMeta(listMeta.ElemMeta);
-                    break;
-                }
-            }
-        }
-
-        //validators
-        public bool ValidateKeys(ArrayList subscripts)
-        {
-            if (subscripts.Count > KeysCount)
-            {
-                throw new ArgumentOutOfRangeException("subscript.Count"
-                    , subscripts.Count
-                    , globalMetaName + " has " + KeysCount + " subscripts;");
-            }
-            for (int i = 0; i < subscripts.Count; i++)
-			{
-                if (!keys[i].ValidateKey(subscripts[i]))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public bool ValidateValues(ArrayList subscripts, ArrayList values)
-        {
-            if (!ValidateKeys(subscripts))
-            {
-                return false;
-            }
-            List<ValueMeta> valMeta = nodesMeta[subscripts.Count-1].Value;
-            for (int i = 0; i < values.Count; i++)
-            {
-                if (!valMeta[i].Validate(values[i]))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-        //
         //
         public EntityMeta GetEntityMeta(int indexCount)
         {
-            EntityMeta meta;
-            meta.EntityName = this[indexCount].Key;
-            meta.KeysValidator = this.GetKeysValidator(indexCount);
-            meta.NormilizedLocalStructs = new List<StructValMeta>(this.localStructs.Count);
-            //
-            for (int i = 0; i < localStructs.Count; i++) { meta.NormilizedLocalStructs.Add(new StructValMeta()); }
-            //
-            foreach (StructValMeta structMeta in localStructs.Values)
+            if (indexCount > 0 && indexCount <= this.NodesWithMetaCount)
             {
-                meta.NormilizedLocalStructs[structMeta.StructId] = structMeta;
+                EntityMeta meta;
+                meta.EntityName = this.nodesMeta[indexCount - 1].Key;
+                meta.KeysValidator = this.keys.GetRange(0, indexCount);
+                meta.NormilizedLocalStructs = null;
+                //
+                meta.ValuesMeta = this.nodesMeta[indexCount - 1].Value;
+                meta.KyesMeta = GetKeysMeta(indexCount);
+                meta.NormilizedLocalStructs = null;
+                return meta;
             }
-            meta.ValuesMeta = this.GetEntityValuesMeta(indexCount).Value;
-            meta.KyesMeta = GetKeysMeta(indexCount);
-            meta.NormilizedLocalStructs = null;
-            return meta;
+            throw new IndexOutOfRangeException("index count out of range");
         }
 
+        //util
+        private ValueMeta getListElemInRecursiveList(ListValMeta listMeta)
+        {
+            ValueMeta recursiveListElemMeta;
+            int maxRecursiveLevelList = 5;
+            getListElem(listMeta, out recursiveListElemMeta, maxRecursiveLevelList);
+            if (recursiveListElemMeta.ExtremeType == ExtremeTypes.EXTREME_LIST)
+            {
+                throw new Exception("To many list in list in list in list ....");
+            }
+            return recursiveListElemMeta;
+        }
+        private void getListElem(ListValMeta list, out ValueMeta listElem, int recLevel)
+        {
+            ValueMeta lstElem = list.ElemMeta;
+            if (lstElem.ExtremeType == ExtremeTypes.EXTREME_LIST && recLevel > 0)
+            {
+                getListElem(list.ElemMeta as ListValMeta, out listElem, recLevel - 1);
+            }
+            else
+            {
+                listElem = list.ElemMeta;
+            }
+        }
     }
 
 
+    public class ProxyValidator
+    {
+        public ProxyValidator()
+        {
+        }
+    }
+
+
+    /// <summary>
+    /// Is a part of globalsMeta. contains links on values meta only
+    /// all values must link to one globalsMeta
+    /// </summary>
     public struct EntityMeta
     {
         public string EntityName;

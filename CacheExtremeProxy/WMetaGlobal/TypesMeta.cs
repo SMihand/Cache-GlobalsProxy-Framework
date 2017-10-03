@@ -29,16 +29,16 @@ namespace CacheEXTREME2.WMetaGlobal
     {
         public ExtremeTypes ExtremeType { get; private set; }
         protected string semanticName;
-        public string SemanticName { get { return semanticName; } }
+        public string SemanticName { get { return semanticName; } set { semanticName = value; } }
         public virtual bool Validate(object value) { return false; }
         public virtual object GetDefaultValue() { return null; }
         public virtual string GetCSharpTypeName() { return null; }
         public virtual void SetRestrictionsMeta(ValueMeta from) { }
         public virtual ArrayList Serialize(){ return new ArrayList{SemanticName,GetCSharpTypeName()};}
         //
-        public ValueMeta(string caption, ExtremeTypes extremeType)
+        public ValueMeta(string semantic, ExtremeTypes extremeType)
         {
-            this.semanticName = caption;
+            this.semanticName = semantic;
             this.ExtremeType = extremeType;
         }
     }
@@ -102,6 +102,15 @@ namespace CacheEXTREME2.WMetaGlobal
             }
             throw new ArrayTypeMismatchException("parameter type 'copyFrom' in '"+
                 sample.GetType().Name + ".CopyFrom'  must be a '" + sample.GetType().Name + "')");
+        }
+        //
+        public bool ValidateDouble(double value)
+        {
+            if ((value < this.minimum) || (value > this.maximum))
+            {
+                throw new ArgumentOutOfRangeException(SemanticName, value, " must be in [" + minimum + " ; " + maximum + "]");
+            }
+            return true;
         }
         //
         public override bool Validate(object value)
@@ -207,6 +216,15 @@ namespace CacheEXTREME2.WMetaGlobal
                 sample.GetType().Name + ".CopyFrom'  must be a '" + sample.GetType().Name + "')");
         }
         //
+        public bool ValidateInt(Int64 value)
+        {
+            if ((value > maximum) || (value < minimum))
+            {
+                throw new ArgumentOutOfRangeException(SemanticName, value, " must be in [" + minimum + " ; " + maximum + "]");
+            }
+            return true;
+        }
+        //
         public override bool Validate(object value)
         {
             return validate(value);
@@ -263,27 +281,27 @@ namespace CacheEXTREME2.WMetaGlobal
         public int MinLenght { get { return minlength; } }
         private int maxlength;
         public int MaxLength { get { return maxlength; } }
-        private string[] _default;
+        private string _default;
         //
         public StringValMeta(ArrayList meta)
             : base(meta[0].ToString(), ExtremeTypes.EXTREME_STRING)
         {
-            _default = new string[1];
+            _default = String.Empty;
             //
             //$lb([0]"key/param name", [1]"type", [2]"minlen", [3]"maxlen", [4]"default")
             minlength = (meta[2].ToString().Trim().Equals("")) ? 0 : (int.Parse(meta[2].ToString()));
             maxlength = (meta[3].ToString().Trim().Equals("")) ? 0xff : (int.Parse(meta[3].ToString()));
-            _default[0] = (meta[4] == null) ? "" : meta[4].ToString();
+            _default = (meta[4] == null) ? "" : meta[4].ToString();
         }
         public StringValMeta(string name, ArrayList typePermissions)
             : base(name, ExtremeTypes.EXTREME_STRING)
         {
-            _default = new string[1];
+            _default = String.Empty;
             //
             //$lb([1]"type", [2]"minlen", [3]"maxlen", [4]"default")
             minlength = int.Parse(typePermissions[1].ToString());
             maxlength = int.Parse(typePermissions[2].ToString());
-            _default[0] = typePermissions[3].ToString();
+            _default = typePermissions[3].ToString();
         }
         public StringValMeta()
             : base("", ExtremeTypes.EXTREME_STRING)
@@ -309,6 +327,14 @@ namespace CacheEXTREME2.WMetaGlobal
                 sample.GetType().Name + ".CopyFrom'  must be a '" + sample.GetType().Name + "')");
         }
         //
+        public bool ValidateString(string value)
+        {
+            if (value.Length > maxlength || value.Length < minlength)
+            {
+                throw new ArgumentException("string length must be in [" + minlength + " ; " + maxlength + "]", SemanticName);
+            }
+            return true;
+        }
         public override bool Validate(object value)
         {
             return validate(value);
@@ -333,12 +359,12 @@ namespace CacheEXTREME2.WMetaGlobal
         //
         public override object GetDefaultValue()
         {
-            return _default[0];
+            return _default;
         }
         public override string ToString()
         {
-            return "name: " + base.SemanticName + "(" + _default[0].GetType().Name + ")" 
-                + ", min: " + minlength + ", max: " + maxlength + ", def: " + _default[0];
+            return "name: " + base.SemanticName + "(" + _default.GetType().Name + ")" 
+                + ", min: " + minlength + ", max: " + maxlength + ", def: " + _default;
         }
         //
         public override string GetCSharpTypeName()
@@ -363,21 +389,26 @@ namespace CacheEXTREME2.WMetaGlobal
     public class BytesValMeta : ValueMeta
     {
         private int maxSize;
+        private int minSize;
         public int MaxSize { get { return maxSize; } }
+        public int MinSize { get { return minSize; } }
         //
         public BytesValMeta(ArrayList meta)
             : base(meta[0].ToString(), ExtremeTypes.EXTREME_BYTES)
         {
             //
             //$lb([0]"key/param name", [1]"type", [2]"maxlen")
-            maxSize = (meta[2].ToString().Trim().Equals("")) ? 0xFFFF : (int.Parse(meta[2].ToString()));
+            minSize = (meta[2].ToString().Trim().Equals("")) ? 0xFFFF : (int.Parse(meta[2].ToString()));
+            maxSize = (meta[3].ToString().Trim().Equals("")) ? 0xFFFF : (int.Parse(meta[3].ToString()));
         }
         public BytesValMeta(string name, ArrayList typePermissions)
             : base(name, ExtremeTypes.EXTREME_BYTES)
         {
             //
             //$lb([1]"type", [2]"maxlen")
-            maxSize = typePermissions[1].ToString().Trim().Equals("") ? 0xFFFF : (int.Parse(typePermissions[1].ToString()));
+            minSize = typePermissions[1].ToString().Trim().Equals("") ? 0xFFFF : (int.Parse(typePermissions[1].ToString()));
+            maxSize = typePermissions[2].ToString().Trim().Equals("") ? 0xFFFF : (int.Parse(typePermissions[2].ToString()));
+        
         }
         public BytesValMeta()
             : base("", ExtremeTypes.EXTREME_BYTES)
@@ -401,6 +432,15 @@ namespace CacheEXTREME2.WMetaGlobal
                 sample.GetType().Name + ".CopyFrom'  must be a '" + sample.GetType().Name + "')");
         }
         //
+        public bool ValidateBytes(byte[] value)
+        {
+            if (value.Length > maxSize)
+            {
+                throw new ArgumentException("too many bytes, must be less then " + maxSize + ";", SemanticName);
+            }
+            return true;
+        }
+        //
         public override bool Validate(object value)
         {
             if(!value.GetType().Equals(typeof(byte[])))
@@ -410,6 +450,10 @@ namespace CacheEXTREME2.WMetaGlobal
             if ((value as byte[]).Length > maxSize)
             {
                 throw new ArgumentException("too many bytes, must be less then "+ maxSize+";",SemanticName);
+            }
+            if ((value as byte[]).Length < minSize)
+            {
+                throw new ArgumentException("too few bytes, must be more then " + minSize + ";", SemanticName);
             }
             return true;
         }
@@ -431,8 +475,8 @@ namespace CacheEXTREME2.WMetaGlobal
         //
         public override ArrayList Serialize()
         {
-            return new ArrayList { base.SemanticName, "bytes", 0, maxSize };
-            return new ArrayList { base.SemanticName, "bytes", 0, maxSize, GetDefaultValue() };
+            return new ArrayList { base.SemanticName, "bytes", minSize, maxSize };
+            //return new ArrayList { base.SemanticName, "bytes", 0, maxSize, GetDefaultValue() };
         }
     }
 
@@ -552,6 +596,26 @@ namespace CacheEXTREME2.WMetaGlobal
             return null;
         }
         //
+        public bool ValidateILIst(IList value)
+        {
+            if (value.Count > maxlength)
+            {
+                throw new ArgumentException("error maxCount in list " + SemanticName + ", recieved: " + value.Count + ";", SemanticName);
+            }
+            for (int i = 0; i < value.Count; i++)
+            {
+                try
+                {
+                    elemMeta.Validate(value[i]);
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException("In " + this.semanticName + ":\n" + ex.Message, "<" + SemanticName + "_List>", ex);
+                }
+            }
+            return true;
+        }
+        //
         public override bool Validate(object value)
         {
             if (!(value is IList))
@@ -605,17 +669,30 @@ namespace CacheEXTREME2.WMetaGlobal
     }
 
 
-    public class StructValMeta : ValueMeta, /*TO THE NEW VERSION WITH STRUCTED KEY*/IKeyValidator
+    public class StructValMeta : ValueMeta, IKeyValidator
     {
-        public int StructId;
-        public string StructTypeName;
-        public List<ValueMeta> elementsMeta;
+        public StructDefinition structDefinition;
+
         //
-        public StructValMeta(string structName,string structTypeName, List<ValueMeta> elementsMeta)
-            : base(structName, ExtremeTypes.EXTREME_STRUCT)
+        public StructValMeta(string structSemantic,string structTypeName, List<ValueMeta> elementsMeta)
+            : base(structSemantic, ExtremeTypes.EXTREME_STRUCT)
         {
-            this.StructTypeName = structTypeName;
-            this.elementsMeta = new List<ValueMeta>(elementsMeta);
+            this.structDefinition = new StructDefinition();
+            this.structDefinition.StructTypeName = structTypeName;
+            this.structDefinition.elementsMeta = new List<ValueMeta>(elementsMeta);
+        }
+        public StructValMeta(string structSemantic, StructDefinition definition)
+            : base(structSemantic, ExtremeTypes.EXTREME_STRUCT)
+        {
+            this.structDefinition = definition;
+        }
+        public StructValMeta(string semantic ,Type structObjectType, List<ValueMeta> elementsMeta)
+            : base(semantic, ExtremeTypes.EXTREME_STRUCT)
+        {
+            this.structDefinition = new StructDefinition();
+            this.structDefinition.structFields = structObjectType.GetFields();
+            this.structDefinition.structObjectType = structObjectType;
+            this.structDefinition.elementsMeta = new List<ValueMeta>(elementsMeta);
         }
 
         public StructValMeta(string structTypeName, List<ValueMeta> elementsMeta)
@@ -626,8 +703,9 @@ namespace CacheEXTREME2.WMetaGlobal
         public StructValMeta(string semanticName, string structTypeName)
             : base(semanticName, ExtremeTypes.EXTREME_STRUCT)
         {
-            this.StructTypeName = structTypeName;
-            this.elementsMeta = new List<ValueMeta>();
+            this.structDefinition = new StructDefinition();
+            this.structDefinition.StructTypeName = structTypeName;
+            this.structDefinition.elementsMeta = new List<ValueMeta>();
         }
 
         public StructValMeta(string structTypeName)
@@ -641,9 +719,8 @@ namespace CacheEXTREME2.WMetaGlobal
         }
 
         public StructValMeta(string semanticName, StructValMeta structMeta)
-            :this(semanticName,structMeta.StructTypeName,structMeta.elementsMeta)
+            :this(semanticName,structMeta.structDefinition.StructTypeName,structMeta.structDefinition.elementsMeta)
         {
-            this.StructId = structMeta.StructId;
         }
         //
         public override void SetRestrictionsMeta(ValueMeta copyFrom)
@@ -652,24 +729,60 @@ namespace CacheEXTREME2.WMetaGlobal
             if (sample != null)
             {
                 this.semanticName = sample.SemanticName;
-                this.StructTypeName = sample.StructTypeName;
+                this.structDefinition.StructTypeName = sample.structDefinition.StructTypeName;
                 string curentSemantic = "";
                 try{
-                    for (int i = 0; i < this.elementsMeta.Count; i++)
+                    for (int i = 0; i < this.structDefinition.elementsMeta.Count; i++)
                     {
-                        curentSemantic = elementsMeta[i].SemanticName;
-                        elementsMeta[i].SetRestrictionsMeta(sample.elementsMeta[i]);
+                        curentSemantic = this.structDefinition.elementsMeta[i].SemanticName;
+                        this.structDefinition.elementsMeta[i].SetRestrictionsMeta(sample.structDefinition.elementsMeta[i]);
                     }
                 }
                 catch (Exception ex){
                     new ArgumentException("Missmathc attributes structure in structs: this "
-                        + this.StructTypeName + "." + curentSemantic 
-                        + ", sample " + sample.StructTypeName + ".???\n"+ex.Message, ex);
+                        + this.structDefinition.StructTypeName + "." + curentSemantic 
+                        + ", sample " + sample.structDefinition.StructTypeName + ".???\n"+ex.Message, ex);
                 }
                 return;
             }
             throw new ArrayTypeMismatchException("parameter type 'copyFrom' in '" +
                 sample.GetType().Name + ".CopyFrom'  must be a '" + sample.GetType().Name + "')");
+        }
+        //
+        public bool ValidateStruct(object entity)
+        {
+            for (int i = 0; i < this.structDefinition.elementsMeta.Count; i++)
+			{
+                try
+                {
+                    switch(this.structDefinition.elementsMeta[i].ExtremeType)
+                    {
+                        case ExtremeTypes.EXTREME_BYTES:
+                            (structDefinition.elementsMeta[i] as BytesValMeta).ValidateBytes((byte[])this.structDefinition.structFields[i].GetValue(entity));
+                            break;
+                        case ExtremeTypes.EXTREME_DOUBLE:
+                            (structDefinition.elementsMeta[i] as DoubleValMeta).ValidateDouble((double)this.structDefinition.structFields[i].GetValue(entity));
+                            break;
+                        case ExtremeTypes.EXTREME_INT:
+                            (structDefinition.elementsMeta[i] as IntValMeta).ValidateInt((int)this.structDefinition.structFields[i].GetValue(entity));
+                            break;
+                        case ExtremeTypes.EXTREME_LIST:
+                            (structDefinition.elementsMeta[i] as ListValMeta).ValidateILIst((IList)this.structDefinition.structFields[i].GetValue(entity));
+                            break;
+                        case ExtremeTypes.EXTREME_STRING:
+                            (structDefinition.elementsMeta[i] as StringValMeta).ValidateString((string)this.structDefinition.structFields[i].GetValue(entity));
+                            break;
+                        case ExtremeTypes.EXTREME_STRUCT:
+                            (structDefinition.elementsMeta[i] as StructValMeta).ValidateStruct(this.structDefinition.structFields[i].GetValue(entity));
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException("in " + this.semanticName + ":\n" + ex.Message, ex);
+                }
+            }
+            return true;
         }
         //
         public override bool Validate(object value)
@@ -679,7 +792,7 @@ namespace CacheEXTREME2.WMetaGlobal
                 throw new ArgumentException("expected Struct value;", SemanticName);
             }
             Type t = value.GetType();
-            foreach (ValueMeta elementMeta in elementsMeta)
+            foreach (ValueMeta elementMeta in this.structDefinition.elementsMeta)
             {
                 try
                 {
@@ -695,24 +808,36 @@ namespace CacheEXTREME2.WMetaGlobal
         //
         public override string ToString()
         {
-            return "name: " + base.SemanticName + "("+this.StructTypeName+")"
-                + "=> struct Id "+StructId+ ";";
+            return "name: " + base.SemanticName + "("+this.structDefinition.StructTypeName+")";
         }
         //
         public override string GetCSharpTypeName()
         {
-            return StructTypeName;
+            return this.structDefinition.StructTypeName;
         }
         //
         public override ArrayList Serialize()
         {
-            return new ArrayList { base.SemanticName, "struct", StructTypeName };
+            return new ArrayList { base.SemanticName, "struct", this.structDefinition.StructTypeName };
         }
 
-        //TO THE NEW VERSION WITH STRUCTED KEYS
         public bool ValidateKey(object keyValue)
         {
             return Validate(keyValue);
         }
+    }
+
+
+    public class StructDefinition
+    {
+        public int StructId;
+
+        public string StructTypeName;
+
+        public Type structObjectType;//need to hold here, cause to many objects(Type) creates in validation method
+
+        public FieldInfo[] structFields;
+
+        public List<ValueMeta> elementsMeta;
     }
 }

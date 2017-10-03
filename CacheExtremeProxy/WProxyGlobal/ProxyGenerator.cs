@@ -26,9 +26,9 @@ namespace CacheEXTREME2.WProxyGlobal
         //
         public EntityGenerator(GlobalMeta globalMeta, int classIndex,string _namespace)
         {
-            keysMeta = globalMeta.GetKeysMeta().GetRange(0,classIndex);
-            className = globalMeta[classIndex].Key+"Proxy";
-            valuesMeta = globalMeta[classIndex].Value;
+            keysMeta = globalMeta.GetKeysMeta(globalMeta.KeysCount).GetRange(0,classIndex);
+            className = globalMeta.GetNodeMeta(classIndex).Key+"Proxy";
+            valuesMeta = globalMeta.GetNodeMeta(classIndex).Value;
             //
             targetUnit = new CodeCompileUnit();
             CodeNamespace codeNamespace = new CodeNamespace(_namespace);
@@ -89,7 +89,7 @@ namespace CacheEXTREME2.WProxyGlobal
                 CodeMemberField field = new CodeMemberField();
                 field.Attributes = MemberAttributes.Public;
                 field.Name = fieldMeta.SemanticName;
-                field.Comments.Add(new CodeCommentStatement(fieldMeta.ToString()));
+                field.Comments.Add(new CodeCommentStatement("key"+fieldMeta.ToString()));
                 //
                 string typeName = fieldMeta.GetCSharpTypeName();
                 switch (fieldMeta.ExtremeType){
@@ -119,7 +119,7 @@ namespace CacheEXTREME2.WProxyGlobal
                 field.Name = fieldMeta.SemanticName;
                 string typeName = fieldMeta.GetCSharpTypeName();
                 field.Type = new CodeTypeReference(typeName);
-                field.Comments.Add(new CodeCommentStatement(fieldMeta.ToString()));
+                field.Comments.Add(new CodeCommentStatement("val"+fieldMeta.ToString()));
                 targetClass.Members.Add(field);
             }
         }
@@ -386,7 +386,7 @@ namespace CacheEXTREME2.WProxyGlobal
 
     public class StructGenerator
     {
-        private StructValMeta structMeta;
+        private StructDefinition structDefinition;
         //
         private CodeTypeDeclaration structDeclaration;
         //
@@ -394,14 +394,14 @@ namespace CacheEXTREME2.WProxyGlobal
         {
         }
         //
-        public CodeTypeDeclaration GetDeclaration(StructValMeta structMeta)
+        public CodeTypeDeclaration GetDeclaration(StructDefinition structDefinition)
         {
-            this.structMeta = structMeta;
+            this.structDefinition = structDefinition;
             //
             structDeclaration = new CodeTypeDeclaration();
             structDeclaration.IsClass = true;
             structDeclaration.Attributes = MemberAttributes.Public;
-            structDeclaration.Name = structMeta.StructTypeName;
+            structDeclaration.Name = structDefinition.StructTypeName;
             //
             main();
             return structDeclaration;
@@ -416,9 +416,9 @@ namespace CacheEXTREME2.WProxyGlobal
         //
         private void addFields()
         {
-            for (int i = 0; i < structMeta.elementsMeta.Count; i++)
+            for (int i = 0; i < structDefinition.elementsMeta.Count; i++)
             {
-                ValueMeta fieldMeta = structMeta.elementsMeta[i];
+                ValueMeta fieldMeta = structDefinition.elementsMeta[i];
                 CodeMemberField field = new CodeMemberField();
                 field.Attributes = MemberAttributes.Public;
                 field.Name = fieldMeta.SemanticName;
@@ -457,9 +457,9 @@ namespace CacheEXTREME2.WProxyGlobal
             CodeConstructor constructor = new CodeConstructor();
             constructor.Attributes = MemberAttributes.Public;
             
-            for (int i = 0; i < structMeta.elementsMeta.Count; i++)
+            for (int i = 0; i < structDefinition.elementsMeta.Count; i++)
             {
-                ValueMeta valMeta = structMeta.elementsMeta[i];
+                ValueMeta valMeta = structDefinition.elementsMeta[i];
                 string typeName = valMeta.GetCSharpTypeName();
                 //Parameter declaration
                 CodeParameterDeclarationExpression paramDeclaration;
@@ -505,9 +505,9 @@ namespace CacheEXTREME2.WProxyGlobal
             CodeConstructor constructor = new CodeConstructor();
             constructor.Attributes = MemberAttributes.Public;
             // Add statements.
-            for (int i = 0; i < structMeta.elementsMeta.Count; i++)
+            for (int i = 0; i < structDefinition.elementsMeta.Count; i++)
             {
-                ValueMeta valMeta = structMeta.elementsMeta[i];
+                ValueMeta valMeta = structDefinition.elementsMeta[i];
                 CodeFieldReferenceExpression valueRef = new CodeFieldReferenceExpression(
                     new CodeThisReferenceExpression(), valMeta.SemanticName);
                 string valTypeName = valMeta.GetCSharpTypeName();
@@ -574,7 +574,7 @@ namespace CacheEXTREME2.WProxyGlobal
             List<CodeTypeDeclaration> entitiesDeclaration = new List<CodeTypeDeclaration>();
             for (int i = 1; i <= globalMeta.KeysCount; i++)
             {
-                if (globalMeta[i].Value.Count >= 1)
+                if (globalMeta.GetNodeMeta(i-1).Value.Count >= 1)
                 {
                     EntityGenerator gen = new EntityGenerator(globalMeta.GetEntityMeta(i), "");
                     //EntityGenerator gen = new EntityGenerator(globalMeta, i, "");
@@ -583,7 +583,7 @@ namespace CacheEXTREME2.WProxyGlobal
                 }
             }
             StructGenerator structGen = new StructGenerator();
-            foreach (StructValMeta structMeta in globalMeta.GetLocalStructs())
+            foreach (StructDefinition structMeta in globalMeta.GetLocalStructs())
             {
                 entitiesDeclaration.Add(structGen.GetDeclaration(structMeta));
             }
@@ -660,19 +660,19 @@ namespace CacheEXTREME2.WProxyGlobal
         public void AddContextFields()
         {
             entities = new List<string>();
-            for (int i = 1; i <= globalMeta.KeysCount; i++)
+            for (int i = 0; i < globalMeta.KeysCount; i++)
             {
-                if (globalMeta[i].Value.Count >= 1)
+                if (globalMeta.GetNodeMeta(i).Value.Count >= 1)
                 {
-                    entities.Add(globalMeta[i].Key);
-                    string ProxyTypeName = globalMeta[i].Key + "Manager";
+                    entities.Add(globalMeta.GetNodeMeta(i).Key);
+                    string ProxyTypeName = globalMeta.GetNodeMeta(i).Key + "Manager";
                     CodeMemberField field = new CodeMemberField();
                     field.Attributes = MemberAttributes.Public;
                     field.Name = ProxyTypeName;
                     /*field.Type = new CodeTypeReference(
                         "ProxyManager<" + globalMeta[i].Key + "Entity>"
                         );*/
-                    field.Type = new CodeTypeReference("ProxyManager", new[] { new CodeTypeReference(globalMeta[i].Key + "Proxy"), new CodeTypeReference(globalMeta[i].Key + "ProxyKey") }); 
+                    field.Type = new CodeTypeReference("ProxyManager", new[] { new CodeTypeReference(globalMeta.GetNodeMeta(i).Key + "Proxy"), new CodeTypeReference(globalMeta.GetNodeMeta(i).Key + "ProxyKey") }); 
                     //
                     targetClass.Members.Add(field);
                 }
@@ -697,15 +697,17 @@ namespace CacheEXTREME2.WProxyGlobal
             CodeBaseReferenceExpression baseref = new CodeBaseReferenceExpression();
             //
             //Adding structManagers Initialization
-            List<StructValMeta> structs = globalMeta.GetLocalStructs();
+            List<StructDefinition> structs = globalMeta.GetLocalStructs();
+            Queue<string> structSequence = new Queue<string>(globalMeta.StructSequence);
             for (int i = 0; i < structs.Count; i++)
             {
+                StructDefinition structDef = globalMeta.GetStructDefinition(structSequence.Dequeue());
                 CodeObjectCreateExpression structObjCreateCode
                     = new CodeObjectCreateExpression(
-                        new CodeTypeReference("StructManager<" + structs[i].StructTypeName + ">")
-                        , new CodeFieldReferenceExpression(baseref, "globalMeta.GetLocalStructs()[" + i + "]")
-                        , new CodeFieldReferenceExpression(baseref, "structsManagers"));
-                        //, new CodeFieldReferenceExpression(new CodeFieldReferenceExpression(baseref, "globalRef"),"Conn"));
+                        new CodeTypeReference("StructManager<" + structDef.StructTypeName + ">")
+                        , new CodeFieldReferenceExpression(baseref, "globalMeta.GetStructDefinition(\"" + structDef.StructTypeName + "\")")
+                        , new CodeFieldReferenceExpression(baseref, "structsManagers")
+                        , new CodeFieldReferenceExpression(new CodeFieldReferenceExpression(baseref, "globalRef"),"Conn"));
                 CodeMethodInvokeExpression codeInvokeExpression = new CodeMethodInvokeExpression(
                         new CodeFieldReferenceExpression(baseref, "structsManagers")
                         , "Add"

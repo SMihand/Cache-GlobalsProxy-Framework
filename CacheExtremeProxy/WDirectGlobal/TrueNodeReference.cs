@@ -1,4 +1,4 @@
-using InterSystems.Globals;
+﻿using InterSystems.Globals;
 using System;
 using System.Collections;
 using System.Globalization;
@@ -115,7 +115,7 @@ namespace CacheEXTREME2.WDirectGlobal
                         }
                     case ExtremeTypes.EXTREME_STRUCT:
                         {
-                            this.AppendSubscripsts((IList)subscripts[i], ((StructValMeta)subscriptsMeta[i]).elementsMeta);
+                            this.AppendSubscripsts((IList)subscripts[i], ((StructValMeta)subscriptsMeta[i]).structDefinition.elementsMeta);
                             continue;
                         }
                     /*case ExtremeTypes.EXTREME_INT:
@@ -167,12 +167,14 @@ namespace CacheEXTREME2.WDirectGlobal
         {
             ValueList list = TrueValueList.CreateValueList(linkToConn, values);
             DirectReference.Set(list);
+            list.Close();
         }
 
         public void SetValuesTyped(IList values, IList<ValueMeta> valuesMeta)
         {
             ValueList list = TrueValueList.CreateValueList(linkToConn, values, valuesMeta);
             DirectReference.Set(list);
+            list.Close();
         }
 
         public void SetValues(ArrayList subscripts, IList values)
@@ -181,6 +183,7 @@ namespace CacheEXTREME2.WDirectGlobal
             this.subscripts = new ArrayList(subscripts.ToArray());//MUST BE OPTIMIZED
             ValueList list = TrueValueList.CreateValueList(linkToConn, values);
             DirectReference.Set(list);
+            list.Close();
             //DirectReference.Set(list, subscripts.ToArray()); 
                 //oh intersystems; after kill subsc count != 0 
                 //NodeRefObl.Set() - appends subscripts instead(vmesto) reseting
@@ -190,6 +193,7 @@ namespace CacheEXTREME2.WDirectGlobal
         {
             ValueList list = TrueValueList.CreateValueList(linkToConn, values);
             DirectReference.Set(list, subscripts);
+            list.Close();
         }
 
         public void SetValues(ValueList values)
@@ -507,7 +511,7 @@ namespace CacheEXTREME2.WDirectGlobal
                     }
                 /*case ExtremeTypes.EXTREME_STRUCT:
                     {
-                        TrueNodeReference.AppendSubscripts(reference,(IList)subscript,((StructValMeta)subscriptMeta).elementsMeta);
+                        TrueNodeReference.AppendSubscripts(reference,(IList)subscript,((StructValMeta)subscriptMeta).structDefinition.elementsMeta);
                         return;
                     }*/
                 /*case ExtremeTypes.EXTREME_INT:
@@ -549,7 +553,7 @@ namespace CacheEXTREME2.WDirectGlobal
                 case ExtremeTypes.EXTREME_STRUCT:
                     {
                         TrueNodeReference.AppendSubscripts(reference
-                            , (IList)subscript, ((StructValMeta)subscriptMeta).elementsMeta);
+                            , (IList)subscript, ((StructValMeta)subscriptMeta).structDefinition.elementsMeta);
                         return;
                     }
                 /*case ExtremeTypes.EXTREME_INT:

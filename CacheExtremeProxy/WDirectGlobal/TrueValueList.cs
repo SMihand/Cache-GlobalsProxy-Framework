@@ -73,7 +73,7 @@ namespace CacheEXTREME2.WDirectGlobal
                             list.Append(valueList);
                             continue;
                     case ExtremeTypes.EXTREME_STRUCT:
-                            ValueList valueListS = CreateValueList(conn, values[i] as IList, (valuesMeta[i] as StructValMeta).elementsMeta);
+                            ValueList valueListS = CreateValueList(conn, values[i] as IList, (valuesMeta[i] as StructValMeta).structDefinition.elementsMeta);
                             list.Append(valueListS);
                             continue;
                     default:
@@ -97,7 +97,7 @@ namespace CacheEXTREME2.WDirectGlobal
                         list.Append(valueListT);
                         continue;
                     case ExtremeTypes.EXTREME_STRUCT:
-                        ValueList valueListS = CreateValueList(conn, values[i] as IList, (valueMeta as StructValMeta).elementsMeta);
+                        ValueList valueListS = CreateValueList(conn, values[i] as IList, (valueMeta as StructValMeta).structDefinition.elementsMeta);
                         list.Append(valueListS);
                         continue;
                     default:
@@ -194,7 +194,7 @@ namespace CacheEXTREME2.WDirectGlobal
                 }
                 case ExtremeTypes.EXTREME_STRUCT:
                 {
-                    return GetValues(list.GetNextList(), (meta as StructValMeta).elementsMeta);
+                    return GetValues(list.GetNextList(), (meta as StructValMeta).structDefinition.elementsMeta);
                 }
             }
             throw new ValueListMetaException(list.GetNextObject());

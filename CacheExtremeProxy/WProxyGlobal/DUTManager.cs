@@ -26,6 +26,7 @@ namespace CacheEXTREME2.WProxyGlobal
         private MethodInfo nodeCustomValidator;
         //
         private List<IStructManager> structsManagers;
+        //private CacheProxySerializer serializer;
         private CacheProxySerializer serializer;
         private KeyStructSerializer<KeyT> keySerializer;
         //
@@ -46,13 +47,16 @@ namespace CacheEXTREME2.WProxyGlobal
             this.nodeCustomValidator = nodeType.GetMethod(nodeType.Name + "Validator");
             initNodeValuesFieldsAndHolders();
             this.keysField = nodeType.GetField(keysStruct.SemanticName);
-            this.serializer = new CacheProxySerializer(keyType.GetFields(), valuesFields
-                , keysStruct.elementsMeta , valuesMeta
-                , structsManagers);
+            this.serializer = new CacheProxySerializer(typeof(ProxyT)
+                , keysStruct.structDefinition.elementsMeta
+                , valuesMeta
+                , structsManagers
+                , globalRef.Conn);
             //HARDcODED serializer DEPRECATED
             this.keySerializer = new KeyStructSerializer<KeyT>(
-                keysStruct.elementsMeta
+                keysStruct.structDefinition.elementsMeta
                 , structsManagers);
+
         }
 
         private void initNodeValuesFieldsAndHolders()
@@ -95,9 +99,10 @@ namespace CacheEXTREME2.WProxyGlobal
             ArrayList keysHolders = new ArrayList();
             for (int i = 0; i < values.Count; i++)
             {
-                keysHolders.AddRange(structsManagers[this.keyMeta.StructId].GetSerializer().SerializeStructedKey(values[i]));
+                keysHolders.AddRange(structsManagers[this.keyMeta.structDefinition.StructId].GetNewSerializer().SerializeKeysPart(values[i]));
             }
-            globalRef.SetValues(keysHolders, serializer.SerializeValues(entity));
+            globalRef.SetSubscripts(keysHolders);
+            globalRef.SetValues(serializer.SerializeValues(entity, globalRef.Conn));
         }
 
         public ProxyT Get(List<KeyT> keys)
@@ -106,7 +111,7 @@ namespace CacheEXTREME2.WProxyGlobal
             ArrayList keysHolders = new ArrayList();
             for (int i = 0; i < keys.Count; i++)
             {
-                keysHolders.AddRange(structsManagers[this.keyMeta.StructId].GetSerializer().SerializeStructedKey(keys[i]));
+                keysHolders.AddRange(structsManagers[this.keyMeta.structDefinition.StructId].GetNewSerializer().SerializeKeysPart(keys[i]));
             }
             globalRef.SetSubscripts(keysHolders);
             if (globalRef.HasValues())
@@ -136,7 +141,7 @@ namespace CacheEXTREME2.WProxyGlobal
             ArrayList keysHolders = new ArrayList();
             for (int i = 0; i < keys.Count; i++)
             {
-                keysHolders.AddRange(structsManagers[this.keyMeta.StructId].GetSerializer().SerializeStructedKey(keys[i]));
+                keysHolders.AddRange(structsManagers[this.keyMeta.structDefinition.StructId].GetNewSerializer().SerializeKeysPart(keys[i]));
             }
             globalRef.SetSubscripts(keysHolders);
             globalRef.Kill();
@@ -152,7 +157,7 @@ namespace CacheEXTREME2.WProxyGlobal
             {
                 KeyT key = (KeyT)keyType.GetConstructors()[0].Invoke(new object[] { });
                 //keySerializer.Deserialize(key, keys);
-                serializer.DeserializeStructedKeys(key, keysQueue);
+                serializer.SerializeKeysPart(key);
                 ((IList)keysField.GetValue(entity)).Add(key);
             } while (keysQueue.Count != 0);
             return entity;
@@ -236,7 +241,7 @@ namespace CacheEXTREME2.WProxyGlobal
                 {
                     case ExtremeTypes.EXTREME_STRUCT:
                         {
-                            serialize(value, (meta[i] as StructValMeta).elementsMeta, serialized);
+                            serialize(value, (meta[i] as StructValMeta).structDefinition.elementsMeta, serialized);
                             break;
                         }
                     default:
@@ -254,8 +259,8 @@ namespace CacheEXTREME2.WProxyGlobal
             {
                 case ExtremeTypes.EXTREME_STRUCT:
                     {
-                        valuesFields[valueIndex].SetValue(entity, structsManagers[(valueMeta as StructValMeta).StructId].CreateStructEntity(values));
-                        for (int i = 0; i < (valueMeta as StructValMeta).elementsMeta.Count; i++)
+                        valuesFields[valueIndex].SetValue(entity, structsManagers[(valueMeta as StructValMeta).structDefinition.StructId].CreateStructEntity(values));
+                        for (int i = 0; i < (valueMeta as StructValMeta).structDefinition.elementsMeta.Count; i++)
                         {
                             values.RemoveAt(0);
                         }

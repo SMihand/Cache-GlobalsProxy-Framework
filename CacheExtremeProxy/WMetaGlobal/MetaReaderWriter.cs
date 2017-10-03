@@ -6,6 +6,10 @@ using System.Collections.Generic;
 
 namespace CacheEXTREME2.WMetaGlobal
 {
+    public interface IMetaReader
+    {
+        GlobalMeta GetMeta(string metaName);
+    }
 
     public class MetaReaderWriter : IMetaReader
     {
@@ -20,37 +24,35 @@ namespace CacheEXTREME2.WMetaGlobal
         };*/
         //
         //readPatterns
-        private List<ValueMeta> str_pattern ;
-        private List<ValueMeta> int_pattern ;
-        private List<ValueMeta> dbl_pattern ;
-        private List<ValueMeta> bts_pattern ;
-        private List<ValueMeta> stc_pattern ;
-        private List<ValueMeta> lst_pattern ;
-        private List<ValueMeta> str_str_;
-        private List<ValueMeta> int_str_;
-        private List<ValueMeta> int_;
+        private List<ValueMeta> strMeta_pattern ;
+        private List<ValueMeta> intMeta_pattern ;
+        private List<ValueMeta> dblMeta_pattern ;
+        private List<ValueMeta> btsMeta_pattern ;
+        private List<ValueMeta> stcMeta_pattern ;
+        private List<ValueMeta> lstMeta_pattern ;
+        private List<ValueMeta> str_str_pattern;
+        private List<ValueMeta> int_str_pattern;
+        private List<ValueMeta> int_pattern;
+        private List<ValueMeta> int_int_pattern;
+        private StructByIdComparator structByIdComparator = new StructByIdComparator();
         //
         private Connection linkToConn;
+
         private TrueNodeReference metaGlob;
+        
         //
         private GlobalMeta gmToReturn;
-        //
-        private int curentKeysCount;
-        private string curentMetaGlobalName;
-        private string curentDataGlobalName;
-        private List<IKeyValidator> curentKeysMeta;
-        private List<KeyValuePair<string, List<ValueMeta>>> curentNodesMeta;
-        private Dictionary<string, StructValMeta> curentLocalStructs;
+
         //
         public MetaReaderWriter(Connection conn)
         {
             this.linkToConn = conn;
             initPattens();
         }
+
         public MetaReaderWriter(Connection conn, string metaGlobalName, out GlobalMeta meta)
             : this(conn)
         {
-            curentMetaGlobalName = metaGlobalName;
             meta = GetMeta(metaGlobalName);
         }
         private void initPattens()
@@ -58,92 +60,136 @@ namespace CacheEXTREME2.WMetaGlobal
             StringValMeta s = new StringValMeta();
             IntValMeta i = new IntValMeta();
             DoubleValMeta d = new DoubleValMeta();
-            str_pattern = new List<ValueMeta>() { s, s, i, i, s };
-            int_pattern = new List<ValueMeta>() { s, s, i, i, i };
-            dbl_pattern = new List<ValueMeta>() { s, s, d, d, d };
-            bts_pattern = new List<ValueMeta>() { s, s, i };
-            stc_pattern = new List<ValueMeta>() { s, s, s};
-            lst_pattern = new List<ValueMeta>() { s, s, i, i, s};
+            strMeta_pattern = new List<ValueMeta>() { s, s, i, i, s };
+            intMeta_pattern = new List<ValueMeta>() { s, s, i, i, i };
+            dblMeta_pattern = new List<ValueMeta>() { s, s, d, d, d };
+            btsMeta_pattern = new List<ValueMeta>() { s, s, i, i };
+            stcMeta_pattern = new List<ValueMeta>() { s, s, s};
+            lstMeta_pattern = new List<ValueMeta>() { s, s, i, i, s};
             
-            str_str_ = new List<ValueMeta>() { s, s };
-            int_str_ = new List<ValueMeta>() { i, s };
-            int_ = new List<ValueMeta>() { i };
+            str_str_pattern = new List<ValueMeta>() { s, s };
+            int_str_pattern = new List<ValueMeta>() { i, s };
+            int_pattern = new List<ValueMeta>() { i };
+            int_int_pattern = new List<ValueMeta> { i, i };
+        }
+        
+ 
+        //Read meta works:
+        public GlobalMeta GetMeta(string metaGlobalName)
+        {
+            metaGlob = new TrueNodeReference(linkToConn, metaGlobalName);
+            this.gmToReturn = new GlobalMeta();
+            this.gmToReturn.GlobalMetaName = metaGlobalName;
+            metaGlob = new TrueNodeReference(linkToConn, metaGlobalName);
+            if (metaGlob.HasSubnodes())
+            {
+                getGLobalInfo(gmToReturn);
+                getLocalStructs(gmToReturn);
+                getKeysMeta(gmToReturn);
+                getValuesMeta(gmToReturn);
+                return gmToReturn;
+            }
+            throw new UnsuportedMetaGlobalExceptionA2(metaGlobalName);
         }
         //
-        private void getGLobalInfo()
+        private void getGLobalInfo(GlobalMeta gm)
         {
             metaGlob.Reset();
             //
-            ValueMeta globalMeta = new StringValMeta();
-            object globalName = metaGlob.GetAtomValue(globalMeta);
-            curentDataGlobalName = globalName.ToString();
-            //
-            metaGlob.SetSubscripts(new ArrayList() { "Indexes", 0 });
-            ArrayList lst = metaGlob.GetValues(int_str_);
-            curentKeysCount = (int)lst[0];
-            curentMetaGlobalName = (string)lst[1];
+            //^nMeta 	= 	(«n», «Navies») 
+            ArrayList globalInfo = metaGlob.GetValues(str_str_pattern);
+            gm.GlobalName = (string)globalInfo[0];
+            gm.GlobalSemantic = (string)globalInfo[1];
         }
-        private void getLocalStructs()
+
+        private void getLocalStructs(GlobalMeta gm)
         {
             metaGlob.Reset();
-            curentLocalStructs = new Dictionary<string, StructValMeta>();
             metaGlob.SetSubscripts(new ArrayList() { "Structs" });
+            List<StructDefinition> structsDefinitions; 
             if(metaGlob.HasValues())
             {
+                structsDefinitions = new List<StructDefinition>();
+                //^nMeta(«Structs») 	= 	$lb(2)
                 int localStructsCount = (int)metaGlob.GetAtomValue(new IntValMeta());
-                ArrayList structsInfoKey = new ArrayList() { "Structs", ""};
-                ArrayList structsValuesKey = new ArrayList() { "Structs", "", 0};
-                metaGlob.SetSubscripts(structsInfoKey);
-                for(int i = 1; i<=localStructsCount; i++)
+                ArrayList nextStructInfoKey = new ArrayList() { "Structs", ""};
+                ArrayList nextStructValuesKey = new ArrayList() { "Structs", "", 0};
+                metaGlob.SetSubscripts(nextStructInfoKey);
+                for(int i = 1; i <= localStructsCount; i++)
                 {
                     metaGlob.GoNextSubscript();
-                    structsInfoKey = metaGlob.GetSubscripts();
-                    structsValuesKey[1] = structsInfoKey[1];
-                    string structName = structsInfoKey[1].ToString();
-                    ArrayList structInfo = metaGlob.GetValues(int_);
+                    nextStructInfoKey = metaGlob.GetSubscripts();
+                    nextStructValuesKey[1] = nextStructInfoKey[1].ToString();
+                    string structTypeName = nextStructInfoKey[1].ToString();
+                    //^nMeta(«Structs», «Classification») 	= 	$lb(2,2)
+                    ArrayList structInfo = metaGlob.GetValues(int_int_pattern);
                     int valuesCount = (int)structInfo[0];
+                    int structId = (int)structInfo[1];
                     List<ValueMeta> structsValuesMeta = new List<ValueMeta>();
                     for (int j = 1; j <= valuesCount; j++)
                     {
-                        structsValuesKey[2] = j;
-                        metaGlob.SetSubscripts(structsValuesKey);
-                        //ArrayList values = metaGlob.TryGetValues();
+                        nextStructValuesKey[2] = j;
+                        metaGlob.SetSubscripts(nextStructValuesKey);
+                        //^nMeta(«Structs»,«ContactInfo»,1) 	= 	$lb(«Name»,«string»,0,255,"")
                         ArrayList values = readValueMeta();
-                        structsValuesMeta.Add(getValueMeta(values));
+                        structsValuesMeta.Add(createValueMeta(values));
                     }
-                    metaGlob.SetSubscripts(structsInfoKey);
+                    metaGlob.SetSubscripts(nextStructInfoKey);
                     //
-                    gmToReturn.AddStruct(new StructValMeta(structName, structsValuesMeta));
-                    //
-                    curentLocalStructs.Add(structName, new StructValMeta(structName, structsValuesMeta));
+                    StructDefinition newStructDef = new StructDefinition();
+                    newStructDef.StructTypeName = structTypeName;
+                    newStructDef.elementsMeta = structsValuesMeta;
+                    newStructDef.StructId = structId;
+                    structsDefinitions.Add(newStructDef);
+                }
+                structsDefinitions.Sort(structByIdComparator);
+                for (int i = 0; i < structsDefinitions.Count; i++)
+                {
+                    gm.AddStruct(structsDefinitions[i]);                    
                 }
             }
         }
-        //
-        private void getKeysMeta()
+        private class StructByIdComparator : IComparer<StructDefinition>
         {
-            curentKeysMeta = new List<IKeyValidator>(curentKeysCount);
-            ArrayList key = new ArrayList(2){"Indexes",0};
-            for (int i = 1; i <= curentKeysCount; i++)
+            public int Compare(StructDefinition x, StructDefinition y)
+            {
+                if (x.StructId > y.StructId)
+                    return 1;
+                if (x.StructId < y.StructId)
+                    return -1;
+                else return 0;
+            }
+        }
+        //
+        private void getKeysMeta(GlobalMeta gm)
+        {
+            ArrayList key = new ArrayList(2){"Indexes",1};
+            metaGlob.Reset();
+            //
+            metaGlob.SetSubscripts(new ArrayList { "Indexes" });
+            //^nMeta(«Indexes») 	= 	$lb(3)
+            ArrayList keysInfo = metaGlob.GetValues(int_pattern);
+            int indexesCount = (int)keysInfo[0];
+            //
+            for (int i = 1; i <= indexesCount; i++)
             {
                 key[1] = i;
                 metaGlob.SetSubscripts(key);
-                //ArrayList keyMeta = metaGlob.TryGetValues();
+                //^nMeta(«Indexes»,1) 	= 	$lb(«Country»,«string»,0,255," Country ")
                 ArrayList keyMeta = readValueMeta();
                 //
-                gmToReturn.AddKeyMeta(getKeyMeta(keyMeta));
-                //
-                curentKeysMeta.Add(getKeyMeta(keyMeta));
+                gm.AddKeyMeta(getKeyMeta(keyMeta));
             }
         }
-        private IKeyValidator getKeyMeta(ArrayList keyNodeList)
+
+        private ValueMeta getKeyMeta(ArrayList keyNodeList)
         {
             //keyNodeList = $lb(<KeyName>,<<TypeDeclaration>>)
             string indextype = keyNodeList[1].ToString();
             switch (indextype)
             {
                 case "string":
-                {   //return new StringValMeta(keyNodeList[0].ToString(),(ArrayList)keyNodeList[1]);
+                {  
                     return new StringValMeta(keyNodeList);
                 }
                 case "integer":
@@ -161,45 +207,45 @@ namespace CacheEXTREME2.WMetaGlobal
                 case "struct":
                 {
                     //return new StructValMeta(keyNodeList[0].ToString(),curentLocalStructs[keyNodeList[2].ToString()]);
-                    return new StructValMeta(keyNodeList[0].ToString(), keyNodeList[2].ToString());
+                    StructValMeta toReturn = new StructValMeta(keyNodeList[0].ToString(), keyNodeList[2].ToString());
+                    return toReturn;
                 }
             }
             return null;
         }
         //
-        private void getValuesMeta()
+        private void getValuesMeta(GlobalMeta gm)
         {
-            curentNodesMeta = new List<KeyValuePair<string, List<ValueMeta>>>(curentKeysCount);
-            ArrayList valuesMetaKey = new ArrayList() {"Values", 0, 0};
-            ArrayList subValuesMetaKey = new ArrayList(){"Values",0,0};
-            for (int i = 1; i <= curentKeysCount; i++)
+            ArrayList valuesMetaKey = new ArrayList() {"Values", 0 };
+            ArrayList subValuesMetaKey = new ArrayList(){"Values", 0, 0};
+            for (int i = 1; i <= gm.KeysCount; i++)
             {
-                //{"Values", i...curentKeysCount , 0}
                 valuesMetaKey[1] = i;
+                subValuesMetaKey[1] = i;
                 metaGlob.SetSubscripts(valuesMetaKey);
-                ArrayList curentNodeValues = metaGlob.GetValues(int_str_);
-                int curentNodeValuesCount = (int)curentNodeValues[0];
-                string curentNodeName = curentNodeValues[1]!=null?curentNodeValues[1].ToString():"";
-                List<ValueMeta> valuesMeta = new List<ValueMeta>(curentNodeValuesCount);
-                for (int j = 1; j <= curentNodeValuesCount; j++)
+                if (metaGlob.HasValues())
                 {
-                    //{"Values", i...curentKeysCount , j...curentNodeValuesCount}
-                    subValuesMetaKey[1] = i;
-                    subValuesMetaKey[2] = j;
-                    metaGlob.SetSubscripts(subValuesMetaKey);
-                    //ArrayList valueMeta = metaGlob.TryGetValues();
-                    ArrayList valueMeta = readValueMeta();
-                    valuesMeta.Add(getValueMeta(valueMeta));
+                    //^nMeta(«Values»,1) 	= 	$lb(2, «Manufacturer»)
+                    ArrayList curentNodeInfo = metaGlob.GetValues(int_str_pattern);
+                    int curentNodeValuesCount = (int)curentNodeInfo[0];
+                    string curentNodeName = curentNodeInfo[1] != null ? curentNodeInfo[1].ToString() : "";
+                    List<ValueMeta> valuesMeta = new List<ValueMeta>(curentNodeValuesCount);
+                    for (int j = 1; j <= curentNodeValuesCount; j++)
+                    {
+                        //{"Values", i...curentKeysCount , j...curentNodeValuesCount}
+                        subValuesMetaKey[2] = j;
+                        metaGlob.SetSubscripts(subValuesMetaKey);
+                        //ArrayList valueMeta = metaGlob.TryGetValues();
+                        ArrayList valueMeta = readValueMeta();
+                        valuesMeta.Add(createValueMeta(valueMeta));
+                    }
+                    //
+                    gm.SetValuesMeta(i, valuesMeta, curentNodeName);
                 }
-                KeyValuePair<string, List<ValueMeta>> kv
-                    = new KeyValuePair<string, List<ValueMeta>>(curentNodeName, valuesMeta);
-                //
-                gmToReturn.SetValuesMeta(i, valuesMeta, curentNodeName);
-                //
-                curentNodesMeta.Add(kv);
             }
         }
-        private ValueMeta getValueMeta(ArrayList valMetaList)
+
+        private ValueMeta createValueMeta(ArrayList valMetaList)
         {
             //keyNodeList = $lb(<ValueName>,<<TypeDeclaration>>)
             string valyeType = valMetaList[1].ToString();
@@ -243,35 +289,35 @@ namespace CacheEXTREME2.WMetaGlobal
             }
             return null;
         }
-        //
+
         private ArrayList readValueMeta()
         {
-            string type = metaGlob.GetValues(str_str_)[1].ToString();
+            string type = metaGlob.GetValues(str_str_pattern)[1].ToString();
             switch (type)
             {
                 case "string":
                     {
-                        return metaGlob.GetValues(str_pattern);
+                        return metaGlob.GetValues(strMeta_pattern);
                     }
                 case "integer":
                     {
-                        return metaGlob.GetValues(int_pattern);
+                        return metaGlob.GetValues(intMeta_pattern);
                     }
                 case "Int32":
                     {
-                        return metaGlob.GetValues(int_pattern);
+                        return metaGlob.GetValues(intMeta_pattern);
                     }
                 case "byte[]":
                     {
-                        return metaGlob.GetValues(bts_pattern);
+                        return metaGlob.GetValues(btsMeta_pattern);
                     }
                 case "double":
                     {
-                        return metaGlob.GetValues(dbl_pattern);
+                        return metaGlob.GetValues(dblMeta_pattern);
                     }
                 case "bytes":
                     {
-                        return metaGlob.GetValues(bts_pattern);
+                        return metaGlob.GetValues(btsMeta_pattern);
                     }
 
                 case "list":
@@ -280,512 +326,110 @@ namespace CacheEXTREME2.WMetaGlobal
                     }
                 case "struct":
                     {
-                        return metaGlob.GetValues(stc_pattern);
+                        return metaGlob.GetValues(stcMeta_pattern);
                     }
             }
             return null;
         }
-        //
-        //
-        public GlobalMeta GetMeta(string metaName)
-        {
-            metaGlob = new TrueNodeReference(linkToConn, metaName);
-            if(metaGlob.HasSubnodes())
-            {
-                getGLobalInfo();
-                //
-                gmToReturn = new GlobalMeta(curentDataGlobalName, curentMetaGlobalName);
-                //
-                getLocalStructs();
-                getKeysMeta();
-                getValuesMeta();
-                return gmToReturn;
-            }
-            throw new UnsuportedMetaGlobalExceptionA2(metaName);
-        }
+       
+
+        //Save meta works:
         public void SaveMeta(GlobalMeta meta)
         {
-            initCurent(meta);
-            save();
-        }
-        public void SaveMeta(string globalMetaName, GlobalMeta meta)
-        {
-            initCurent(meta);
-            curentMetaGlobalName = globalMetaName;
-            save();
-        }
-        //
-        private void initCurent(GlobalMeta meta)
-        {
-            curentMetaGlobalName = meta.GlobalMetaName;
-            curentDataGlobalName = meta.GlobalName;
-            curentKeysCount = meta.KeysCount;
-            curentKeysMeta = meta.GetKeysValidator();
-            curentNodesMeta = new List<KeyValuePair<string, List<ValueMeta>>>();
-            for (int i = 1; i <= meta.KeysCount; i++)
-            {
-                curentNodesMeta.Add(meta.GetEntityValuesMeta(i));
-            }
-            curentLocalStructs = new Dictionary<string, StructValMeta>();
-            List<StructValMeta> localStructs = meta.GetLocalStructs();
-            for (int i = 0; i < localStructs.Count; i++)
-            {
-                curentLocalStructs.Add(localStructs[i].StructTypeName, localStructs[i]);
-            }
-        }
-        private void save()
-        {
-            metaGlob = new TrueNodeReference(linkToConn, curentMetaGlobalName);
-            SaveGLobalInfo();
-            SaveKeysMeta();
-            SaveValuesMeta();
-            SetLocalStructs();
+            metaGlob = new TrueNodeReference(linkToConn, meta.GlobalMetaName);
+            saveGLobalInfo(meta);
+            saveLocalStructs(meta);
+            saveKeysMeta(meta);
+            saveNodesMeta(meta);
             metaGlob.Reset();
         }
         //
-        private void SetLocalStructs()
+        private void saveGLobalInfo(GlobalMeta meta)
+        {
+            //^nMeta 	= 	(«n», «Navies») 
+            metaGlob.Reset();
+            metaGlob.SetValuesTyped(new ArrayList { meta.GlobalName, meta.GlobalSemantic }, str_str_pattern);
+        }
+
+        private void saveLocalStructs(GlobalMeta meta)
         {
             metaGlob.Reset();
             metaGlob.AppendSubscript("Structs");
-            metaGlob.SetAtomValue(curentLocalStructs.Count);
-            List<string> structsNames = new List<string>(curentLocalStructs.Keys);
-            foreach (string svmName in structsNames)
+            List<StructDefinition> localStructs = meta.GetLocalStructs();
+            //^nMeta(«Structs») 	= 	$lb(2)
+            metaGlob.SetAtomValue(localStructs.Count);
+            Queue<string> structsQueue = new Queue<string>(meta.StructSequence);
+            for (int i = 0; i < localStructs.Count; i++)
             {
-                metaGlob.SetValues(new ArrayList() { "Structs", svmName }, new ArrayList() { curentLocalStructs[svmName].elementsMeta.Count }); // +- 1                
-                for (int j = 0; j < curentLocalStructs[svmName].elementsMeta.Count; j++)
+                StructDefinition structDef = meta.GetStructDefinition(structsQueue.Dequeue()); 
+                //       indicator    name          countelements id
+                //^nMeta(«Structs», «Classification») 	= 	$lb(2,2)
+                metaGlob.SetValues(new ArrayList() { "Structs", structDef.StructTypeName }
+                    , new ArrayList() { structDef.elementsMeta.Count , i}); // +- 1                
+                for (int j = 0; j < structDef.elementsMeta.Count; j++)
                 {
-                    metaGlob.SetValues(new ArrayList() { "Structs", svmName, j + 1 }, curentLocalStructs[svmName].elementsMeta[j].Serialize());
+                    //^nMeta(«Structs»,«Classification»,1) 	= 	$lb(«ClassType»,«string»,0,255," ClassType")
+                    metaGlob.SetValues(new ArrayList() { "Structs", structDef.StructTypeName, j + 1 }
+                        , structDef.elementsMeta[j].Serialize());
                 }
             }
         }
 
-        private void SaveGLobalInfo()
+        private void saveKeysMeta(GlobalMeta meta)
         {
             metaGlob.Reset();
-            metaGlob.SetAtomValue(curentDataGlobalName);
-        }
-
-        private void SaveKeysMeta()
-        {
-            metaGlob.Reset();
-            metaGlob.SetValues(new ArrayList() { "Indexes", 0 }, new ArrayList { curentKeysCount, curentMetaGlobalName });
-            for (int i = 0; i < curentKeysCount; i++)
+            //^nMeta(«Indexes») 	= 	$lb(3)
+            metaGlob.SetValues(new ArrayList() { "Indexes" }, new ArrayList { meta.KeysCount });
+            for (int i = 0; i < meta.KeysCount; i++)
             {
-                metaGlob.SetValues(new ArrayList() { "Indexes", i + 1 }, ((ValueMeta)curentKeysMeta[i]).Serialize());
+                //^nMeta(«Indexes»,1) 	= 	$lb(«Country», «string», 0, 255, "Country")
+                metaGlob.SetValues(new ArrayList() { "Indexes", i + 1 }, meta[i].Serialize());
             }
         }
 
-        private void SaveValuesMeta()
+        private void saveNodesMeta(GlobalMeta meta)
         {
             metaGlob.Reset();
-            //metaGlob.SetValues(new ArrayList() { "Values", 0 }, new ArrayList() { curentNodesMeta.Count, "ValueDefinition" });
-            for (int i = 0; i < curentKeysCount; i++)
+            ArrayList nodeInfoKey = new ArrayList { "Values", 0};
+            ArrayList nodeInfoValue = new ArrayList { 0 , ""};
+            ArrayList emptyNodeInfo = new ArrayList {0 , ""};
+            ArrayList nodeValueKey = new ArrayList { "Values", 0, 1 };
+            for (int i = 0; i < meta.NodesWithMetaCount; i++)
             {
-                ArrayList counter = new ArrayList { curentNodesMeta[i].Value.Count, curentNodesMeta[i].Key };
-                metaGlob.SetValues(new ArrayList() { "Values", i + 1, 0 }, counter);// +- 1
-                if (curentNodesMeta[i].Value.Count != 0)
+                KeyValuePair<string, List<ValueMeta>> nodeMeta = meta.GetNodeMeta(i);
+                nodeInfoValue[0] = nodeMeta.Value.Count;
+                nodeInfoValue[1] = nodeMeta.Key;
+                //^nMeta(«Values»,1) 	= 	$lb(2, «Manufacturer»)
+                nodeInfoKey[1] = i + 1;
+                metaGlob.SetValues(nodeInfoKey, nodeInfoValue);// +- 1
+                if (nodeMeta.Value.Count != 0)
                 {
-                    KeyValuePair<string, List<ValueMeta>> kvp = curentNodesMeta[i];
-                    ArrayList valueKey = new ArrayList() { "Values", i + 1, 1 };
-                    for (int j = 0; j < kvp.Value.Count; j++)
+                    nodeValueKey[1] = i + 1;
+                    nodeValueKey[2] = 1;
+                    for (int j = 0; j < nodeMeta.Value.Count; j++)
                     {
-                        metaGlob.SetValues(valueKey, kvp.Value[j].Serialize());
-                        valueKey[2] = (int)valueKey[2] + 1;
+                        //^nMeta(«Values»,1,1) 	= 	$lb(«Charge»,«struct»,«ContactInfo») 
+                        metaGlob.SetValues(nodeValueKey, nodeMeta.Value[j].Serialize());
+                        nodeValueKey[2] = (int)nodeValueKey[2] + 1;
                     }
+                }
+                else if(nodeMeta.Value.Count == 0)
+                {
+                    metaGlob.SetValues(nodeInfoKey, emptyNodeInfo);
                 }
             }
         }
     }
 
-    public class MetaReaderA2_Deprecated : IMetaReader
-    {
-        //
-        /*private static Dictionary<string, ExtremeTypes> types = new Dictionary<string, ExtremeTypes>{
-            {"string", ExtremeTypes.EXTREME_STRING},
-            {"integer", ExtremeTypes.EXTREME_INT},
-            {"double", ExtremeTypes.EXTREME_DOUBLE},
-            {"bytes",ExtremeTypes.EXTREME_BYTES},
-            {"list", ExtremeTypes.EXTREME_LIST},
-            {"struct",ExtremeTypes.EXTREME_STRUCT}
-        };*/
-        //
-        //readPatterns
-        private List<ValueMeta> str_pattern;
-        private List<ValueMeta> int_pattern;
-        private List<ValueMeta> dbl_pattern;
-        private List<ValueMeta> bts_pattern;
-        private List<ValueMeta> stc_pattern;
-        private List<ValueMeta> lst_pattern;
-        private List<ValueMeta> str_str_;
-        private List<ValueMeta> int_str_;
-        private List<ValueMeta> int_;
-        //
-        private Connection linkToConn;
-        private TrueNodeReference metaGlob;
-        //
-        private int curentKeysCount;
-        private string curentMetaGlobalName;
-        private string curentDataGlobalName;
-        private List<IKeyValidator> curentKeysMeta;
-        private List<KeyValuePair<string, List<ValueMeta>>> curentNodesMeta;
-        private Dictionary<string, StructValMeta> curentLocalStructs;
-        //
-        public MetaReaderA2_Deprecated(Connection conn)
-        {
-            this.linkToConn = conn;
-            initPattens();
-        }
-        public MetaReaderA2_Deprecated(Connection conn, string metaGlobalName, out GlobalMeta meta)
-            : this(conn)
-        {
-            curentMetaGlobalName = metaGlobalName;
-            meta = GetMeta(metaGlobalName);
-        }
-        private void initPattens()
-        {
-            StringValMeta s = new StringValMeta();
-            IntValMeta i = new IntValMeta();
-            DoubleValMeta d = new DoubleValMeta();
-            str_pattern = new List<ValueMeta>() { s, s, i, i, s };
-            int_pattern = new List<ValueMeta>() { s, s, i, i, i };
-            dbl_pattern = new List<ValueMeta>() { s, s, d, d, d };
-            bts_pattern = new List<ValueMeta>() { s, s, i };
-            stc_pattern = new List<ValueMeta>() { s, s, s };
-            lst_pattern = new List<ValueMeta>() { s, s, i, i, s };
-
-            str_str_ = new List<ValueMeta>() { s, s };
-            int_str_ = new List<ValueMeta>() { i, s };
-            int_ = new List<ValueMeta>() { i };
-        }
-        //
-        private void getGLobalInfo()
-        {
-            metaGlob.Reset();
-            //
-            ValueMeta globalMeta = new StringValMeta();
-            object globalName = metaGlob.GetAtomValue(globalMeta);
-            curentDataGlobalName = globalName.ToString();
-            //
-            metaGlob.SetSubscripts(new ArrayList() { "Indexes", 0 });
-            ArrayList lst = metaGlob.GetValues(int_str_);
-            curentKeysCount = (int)lst[0];
-            curentMetaGlobalName = (string)lst[1];
-        }
-        private void getLocalStructs()
-        {
-            metaGlob.Reset();
-            curentLocalStructs = new Dictionary<string, StructValMeta>();
-            metaGlob.SetSubscripts(new ArrayList() { "Structs" });
-            if (metaGlob.HasValues())
-            {
-                int localStructsCount = (int)metaGlob.GetAtomValue(new IntValMeta());
-                ArrayList structsInfoKey = new ArrayList() { "Structs", "" };
-                ArrayList structsValuesKey = new ArrayList() { "Structs", "", 0 };
-                metaGlob.SetSubscripts(structsInfoKey);
-                for (int i = 1; i <= localStructsCount; i++)
-                {
-                    metaGlob.GoNextSubscript();
-                    structsInfoKey = metaGlob.GetSubscripts();
-                    structsValuesKey[1] = structsInfoKey[1];
-                    string structName = structsInfoKey[1].ToString();
-                    ArrayList structInfo = metaGlob.GetValues(int_);
-                    int valuesCount = (int)structInfo[0];
-                    List<ValueMeta> structsValuesMeta = new List<ValueMeta>();
-                    for (int j = 1; j <= valuesCount; j++)
-                    {
-                        structsValuesKey[2] = j;
-                        metaGlob.SetSubscripts(structsValuesKey);
-                        //ArrayList values = metaGlob.TryGetValues();
-                        ArrayList values = readValueMeta();
-                        structsValuesMeta.Add(getValueMeta(values));
-                    }
-                    metaGlob.SetSubscripts(structsInfoKey);
-                    curentLocalStructs.Add(structName, new StructValMeta(structName, structsValuesMeta));
-                }
-            }
-        }
-        //
-        private void getKeysMeta()
-        {
-            curentKeysMeta = new List<IKeyValidator>(curentKeysCount);
-            ArrayList key = new ArrayList(2) { "Indexes", 0 };
-            for (int i = 1; i <= curentKeysCount; i++)
-            {
-                key[1] = i;
-                metaGlob.SetSubscripts(key);
-                //ArrayList keyMeta = metaGlob.TryGetValues();
-                ArrayList keyMeta = readValueMeta();
-                curentKeysMeta.Add(getKeyMeta(keyMeta));
-            }
-        }
-        private IKeyValidator getKeyMeta(ArrayList keyNodeList)
-        {
-            //keyNodeList = $lb(<KeyName>,<<TypeDeclaration>>)
-            string indextype = keyNodeList[1].ToString();
-            switch (indextype)
-            {
-                case "string":
-                    {   //return new StringValMeta(keyNodeList[0].ToString(),(ArrayList)keyNodeList[1]);
-                        return new StringValMeta(keyNodeList);
-                    }
-                case "integer":
-                    {
-                        return new IntValMeta(keyNodeList);
-                    }
-                case "Int32":
-                    {
-                        return new IntValMeta(keyNodeList);
-                    }
-                case "double":
-                    {
-                        return new DoubleValMeta(keyNodeList);
-                    }
-                case "struct":
-                    {
-                        //return new StructValMeta(keyNodeList[0].ToString(),curentLocalStructs[keyNodeList[2].ToString()]);
-                        return new StructValMeta(keyNodeList[0].ToString(), keyNodeList[2].ToString());
-                    }
-            }
-            return null;
-        }
-        //
-        private void getValuesMeta()
-        {
-            curentNodesMeta = new List<KeyValuePair<string, List<ValueMeta>>>(curentKeysCount);
-            ArrayList valuesMetaKey = new ArrayList() { "Values", 0, 0 };
-            ArrayList subValuesMetaKey = new ArrayList() { "Values", 0, 0 };
-            for (int i = 1; i <= curentKeysCount; i++)
-            {
-                //{"Values", i...curentKeysCount , 0}
-                valuesMetaKey[1] = i;
-                metaGlob.SetSubscripts(valuesMetaKey);
-                ArrayList curentNodeValues = metaGlob.GetValues(int_str_);
-                int curentNodeValuesCount = (int)curentNodeValues[0];
-                string curentNodeName = curentNodeValues[1] != null ? curentNodeValues[1].ToString() : "";
-                List<ValueMeta> valuesMeta = new List<ValueMeta>(curentNodeValuesCount);
-                for (int j = 1; j <= curentNodeValuesCount; j++)
-                {
-                    //{"Values", i...curentKeysCount , j...curentNodeValuesCount}
-                    subValuesMetaKey[1] = i;
-                    subValuesMetaKey[2] = j;
-                    metaGlob.SetSubscripts(subValuesMetaKey);
-                    //ArrayList valueMeta = metaGlob.TryGetValues();
-                    ArrayList valueMeta = readValueMeta();
-                    valuesMeta.Add(getValueMeta(valueMeta));
-                }
-                KeyValuePair<string, List<ValueMeta>> kv
-                    = new KeyValuePair<string, List<ValueMeta>>(curentNodeName, valuesMeta);
-                curentNodesMeta.Add(kv);
-            }
-        }
-        private ValueMeta getValueMeta(ArrayList valMetaList)
-        {
-            //keyNodeList = $lb(<ValueName>,<<TypeDeclaration>>)
-            string valyeType = valMetaList[1].ToString();
-            switch (valyeType)
-            {
-                case "string":
-                    {//return new StringValMeta(valMetaList[0].ToString(), (ArrayList)valMetaList[1]);
-                        return new StringValMeta(valMetaList);
-                    }
-                case "integer":
-                    {
-                        return new IntValMeta(valMetaList);
-                    }
-                case "Int32":
-                    {
-                        return new IntValMeta(valMetaList);
-                    }
-                case "byte[]":
-                    {
-                        return new BytesValMeta(valMetaList);
-                    }
-                case "double":
-                    {
-                        return new DoubleValMeta(valMetaList);
-                    }
-                case "bytes":
-                    {
-                        return new BytesValMeta(valMetaList);
-                    }
-
-                case "list":
-                    {
-                        //string listSemanticName = valMetaList[0].ToString();
-                        //ValueMeta elemMeta = getValueMeta(valMetaList.GetRange(
-                        return new ListValMeta(valMetaList);
-                    }
-                case "struct":
-                    {
-                        return new StructValMeta(valMetaList[0].ToString(), valMetaList[2].ToString());
-                    }
-            }
-            return null;
-        }
-        //
-        private ArrayList readValueMeta()
-        {
-            string type = metaGlob.GetValues(str_str_)[1].ToString();
-            switch (type)
-            {
-                case "string":
-                    {
-                        return metaGlob.GetValues(str_pattern);
-                    }
-                case "integer":
-                    {
-                        return metaGlob.GetValues(int_pattern);
-                    }
-                case "Int32":
-                    {
-                        return metaGlob.GetValues(int_pattern);
-                    }
-                case "byte[]":
-                    {
-                        return metaGlob.GetValues(bts_pattern);
-                    }
-                case "double":
-                    {
-                        return metaGlob.GetValues(dbl_pattern);
-                    }
-                case "bytes":
-                    {
-                        return metaGlob.GetValues(bts_pattern);
-                    }
-
-                case "list":
-                    {
-                        return metaGlob.GetValues(new StringValMeta());
-                    }
-                case "struct":
-                    {
-                        return metaGlob.GetValues(stc_pattern);
-                    }
-            }
-            return null;
-        }
-        //
-        //
-        public GlobalMeta GetMeta(string metaName)
-        {
-            metaGlob = new TrueNodeReference(linkToConn, metaName);
-            if (metaGlob.HasSubnodes())
-            {
-                getGLobalInfo();
-                getLocalStructs();
-                getKeysMeta();
-                getValuesMeta();
-                GlobalMeta gm = new GlobalMeta(curentMetaGlobalName, curentDataGlobalName, curentKeysMeta, curentNodesMeta);
-                foreach (KeyValuePair<string, StructValMeta> _struct in curentLocalStructs)
-                {
-                    gm.AddStruct(_struct.Key, _struct.Value);
-                }
-                return gm;
-            }
-            throw new UnsuportedMetaGlobalExceptionA2(metaName);
-        }
-        public void SaveMeta(GlobalMeta meta)
-        {
-            initCurent(meta);
-            save();
-        }
-        public void SaveMeta(string globalMetaName, GlobalMeta meta)
-        {
-            initCurent(meta);
-            curentMetaGlobalName = globalMetaName;
-            save();
-        }
-        //
-        private void initCurent(GlobalMeta meta)
-        {
-            curentMetaGlobalName = meta.GlobalMetaName;
-            curentDataGlobalName = meta.GlobalName;
-            curentKeysCount = meta.KeysCount;
-            curentKeysMeta = meta.GetKeysValidator();
-            curentNodesMeta = new List<KeyValuePair<string, List<ValueMeta>>>();
-            for (int i = 1; i <= meta.KeysCount; i++)
-            {
-                curentNodesMeta.Add(meta.GetEntityValuesMeta(i));
-            }
-            curentLocalStructs = new Dictionary<string, StructValMeta>();
-            List<StructValMeta> localStructs = meta.GetLocalStructs();
-            for (int i = 0; i < localStructs.Count; i++)
-            {
-                curentLocalStructs.Add(localStructs[i].StructTypeName, localStructs[i]);
-            }
-        }
-        private void save()
-        {
-            metaGlob = new TrueNodeReference(linkToConn, curentMetaGlobalName);
-            SaveGLobalInfo();
-            SaveKeysMeta();
-            SaveValuesMeta();
-            SetLocalStructs();
-            metaGlob.Reset();
-        }
-        //
-        private void SetLocalStructs()
-        {
-            metaGlob.Reset();
-            metaGlob.AppendSubscript("Structs");
-            metaGlob.SetAtomValue(curentLocalStructs.Count);
-            List<string> structsNames = new List<string>(curentLocalStructs.Keys);
-            foreach (string svmName in structsNames)
-            {
-                metaGlob.SetValues(new ArrayList() { "Structs", svmName }, new ArrayList() { curentLocalStructs[svmName].elementsMeta.Count }); // +- 1                
-                for (int j = 0; j < curentLocalStructs[svmName].elementsMeta.Count; j++)
-                {
-                    metaGlob.SetValues(new ArrayList() { "Structs", svmName, j + 1 }, curentLocalStructs[svmName].elementsMeta[j].Serialize());
-                }
-            }
-        }
-
-        private void SaveGLobalInfo()
-        {
-            metaGlob.Reset();
-            metaGlob.SetAtomValue(curentDataGlobalName);
-        }
-
-        private void SaveKeysMeta()
-        {
-            metaGlob.Reset();
-            metaGlob.SetValues(new ArrayList() { "Indexes", 0 }, new ArrayList { curentKeysCount, curentMetaGlobalName });
-            for (int i = 0; i < curentKeysCount; i++)
-            {
-                metaGlob.SetValues(new ArrayList() { "Indexes", i + 1 }, ((ValueMeta)curentKeysMeta[i]).Serialize());
-            }
-        }
-
-        private void SaveValuesMeta()
-        {
-            metaGlob.Reset();
-            //metaGlob.SetValues(new ArrayList() { "Values", 0 }, new ArrayList() { curentNodesMeta.Count, "ValueDefinition" });
-            for (int i = 0; i < curentKeysCount; i++)
-            {
-                ArrayList counter = new ArrayList { curentNodesMeta[i].Value.Count, curentNodesMeta[i].Key };
-                metaGlob.SetValues(new ArrayList() { "Values", i + 1, 0 }, counter);// +- 1
-                if (curentNodesMeta[i].Value.Count != 0)
-                {
-                    KeyValuePair<string, List<ValueMeta>> kvp = curentNodesMeta[i];
-                    ArrayList valueKey = new ArrayList() { "Values", i + 1, 1 };
-                    for (int j = 0; j < kvp.Value.Count; j++)
-                    {
-                        metaGlob.SetValues(valueKey, kvp.Value[j].Serialize());
-                        valueKey[2] = (int)valueKey[2] + 1;
-                    }
-                }
-            }
-        }
-    }
-
-    class UnsuportedMetaGlobalExceptionA2 : Exception
+    class UnsuportedMetaGlobalException : Exception
     {
         public string globalMetaName;
-        public UnsuportedMetaGlobalExceptionA2(string globalMetaName)
-            : base("Unsupoted Meta specification in " + globalMetaName + "!")
+        public UnsuportedMetaGlobalException(string globalMetaName)
+            : base("Unsuported Meta specification in " + globalMetaName + "!")
         {
             this.globalMetaName = globalMetaName;
         }
     }
+
 
 }

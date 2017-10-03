@@ -55,9 +55,9 @@ namespace CacheEXTREME2.WProxyGlobal
             entitiesMeta = new Dictionary<string, EntityMeta>();
             for (int i = 1; i <= globalMeta.KeysCount; i++)
             {
-                if (globalMeta[i].Value.Count >= 1)
+                if (globalMeta.GetEntityMeta(i).ValuesMeta.Count > 0)
                 {
-                    string entityName = globalMeta[i].Key + "Proxy";
+                    string entityName = globalMeta.GetNodeMeta(i - 1).Key + "Proxy";
                     entitiesMeta.Add(entityName, globalMeta.GetEntityMeta(i));
                 }
             }
@@ -71,7 +71,8 @@ namespace CacheEXTREME2.WProxyGlobal
             }
             return false;
         }
-        public bool HasEntity(Type entityType){
+        public bool HasEntity(Type entityType)
+        {
             if (entitiesMeta.ContainsKey(entityType.Name))
             {
                 return true;
@@ -115,7 +116,10 @@ namespace CacheEXTREME2.WProxyGlobal
             string entityName = entityType.Name;
             if (HasEntity(entityType))
             {
-                globalMeta.ValidateKeys(keys);
+                for (int i = 0; i < keys.Count; i++)
+                {
+                    this.globalMeta[i].Validate(keys[i]);
+                }
                 List<ValueMeta> valuesMeta = entitiesMeta[entityName].ValuesMeta;
                 List<ValueMeta> keysMeta = entitiesMeta[entityName].KyesMeta;
                 globalRef.SetSubscripts(keys);
@@ -171,12 +175,18 @@ namespace CacheEXTREME2.WProxyGlobal
                 {
                     keys.Add(fields[i].GetValue(entity));
                 }
-                globalMeta.ValidateKeys(keys);
-                for (int i = keysCount, j = 0; j < globalMeta[keys.Count].Value.Count; i++, j++)
+                for (int i = 0; i < keys.Count; i++)
+                {
+                    this.globalMeta[i].Validate(keys[i]);
+                }
+                for (int i = keysCount, j = 0; j < globalMeta.GetNodeMeta(keysCount).Value.Count; i++, j++)
                 {
                     values.Add(fields[i].GetValue(entity));
                 }
-                globalMeta.ValidateValues(keys,values);
+                for (int j = 0; j < values.Count; j++)
+                {
+                    this.globalMeta[keys.Count - 1, j].Validate(values[j]);
+                }
                 globalRef.SetValues(keys, values);
             }
         }

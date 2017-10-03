@@ -32,8 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CacheExtremeProxy">
-      <HintPath>..\CacheExtremeProxy\bin\Release\CacheExtremeProxy.dll</HintPath>
+    <Reference Include="CacheExtremeProxy, Version=1.0.0.0, Culture=neutral, PublicKeyToken=0bc4b6c5b24605f0, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\CacheExtremeProxy\bin\Debug\CacheExtremeProxy.dll</HintPath>
     </Reference>
     <Reference Include="InterSystems.CacheExtreme">
       <HintPath>..\CacheExtremeProxy\bin\Release\InterSystems.CacheExtreme.dll</HintPath>

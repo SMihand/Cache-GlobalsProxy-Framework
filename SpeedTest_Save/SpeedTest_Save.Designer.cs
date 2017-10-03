@@ -40,6 +40,7 @@
             this.progressNative = new System.Windows.Forms.ToolStripProgressBar();
             this.progressTrue = new System.Windows.Forms.ToolStripProgressBar();
             this.progressClear = new System.Windows.Forms.ToolStripProgressBar();
+            this.btnValidation = new System.Windows.Forms.ToolStripStatusLabel();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.statusStrip.SuspendLayout();
@@ -111,7 +112,8 @@
             this.progressObject,
             this.progressNative,
             this.progressTrue,
-            this.progressClear});
+            this.progressClear,
+            this.btnValidation});
             this.statusStrip.Location = new System.Drawing.Point(0, 291);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(1127, 22);
@@ -121,23 +123,31 @@
             // progressObject
             // 
             this.progressObject.Name = "progressObject";
-            this.progressObject.Size = new System.Drawing.Size(200, 16);
+            this.progressObject.Size = new System.Drawing.Size(400, 16);
             // 
             // progressNative
             // 
             this.progressNative.Name = "progressNative";
-            this.progressNative.Size = new System.Drawing.Size(200, 16);
+            this.progressNative.Size = new System.Drawing.Size(400, 16);
             this.progressNative.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             // 
             // progressTrue
             // 
             this.progressTrue.Name = "progressTrue";
-            this.progressTrue.Size = new System.Drawing.Size(200, 16);
+            this.progressTrue.Size = new System.Drawing.Size(100, 16);
             // 
             // progressClear
             // 
             this.progressClear.Name = "progressClear";
             this.progressClear.Size = new System.Drawing.Size(120, 16);
+            // 
+            // btnValidation
+            // 
+            this.btnValidation.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
+            this.btnValidation.Name = "btnValidation";
+            this.btnValidation.Size = new System.Drawing.Size(76, 17);
+            this.btnValidation.Text = "OFF validation";
+            this.btnValidation.Click += new System.EventHandler(this.btnValidation_Click);
             // 
             // numericUpDown1
             // 
@@ -149,7 +159,7 @@
             0});
             this.numericUpDown1.Location = new System.Drawing.Point(955, 262);
             this.numericUpDown1.Maximum = new decimal(new int[] {
-            500000,
+            2000000,
             0,
             0,
             0});
@@ -204,6 +214,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn objectCol;
         private System.Windows.Forms.DataGridViewTextBoxColumn nativeCol;
         private System.Windows.Forms.DataGridViewTextBoxColumn trueCol;
+        private System.Windows.Forms.ToolStripStatusLabel btnValidation;
     }
 }
 

@@ -44,10 +44,10 @@ namespace Generated
     public class classinfoProxy
     {
         
-        // name: shipclass(String), min: 0, max: 255, def: 
+        // keyname: shipclass(String), min: 0, max: 255, def: 
         public String shipclass;
         
-        // name: shipsCount(Int32), min: 0, max: 1000, def: 0
+        // valname: shipsCount(Int32), min: 0, max: 1000, def: 0
         public Int32 shipsCount;
         
         public classinfoProxy(String shipclass, Int32 shipsCount)
@@ -88,22 +88,22 @@ namespace Generated
     public class stuffProxy
     {
         
-        // name: shipclass(String), min: 0, max: 255, def: 
+        // keyname: shipclass(String), min: 0, max: 255, def: 
         public String shipclass;
         
-        // name: shiprank(Int32), min: 0, max: 1005000, def: 5
+        // keyname: shiprank(Int32), min: 0, max: 1005000, def: 5
         public Int32? shiprank;
         
-        // name: workers(List<name: (String), min: 0, max: 255, def: 0>), min: 0, max: 100
+        // valname: workers(List<name: (String), min: 0, max: 255, def: 0>), min: 0, max: 100
         public List<String> workers;
         
-        // name: officers(List<name: (String), min: 0, max: 255, def: 0>), min: 0, max: 100
+        // valname: officers(List<name: (String), min: 0, max: 255, def: 0>), min: 0, max: 100
         public List<String> officers;
         
-        // name: workerSalary(Int32), min: 1, max: 2000, def: 0
+        // valname: workerSalary(Int32), min: 1, max: 2000, def: 0
         public Int32 workerSalary;
         
-        // name: photo(byte[]), max: 200000
+        // valname: photo(byte[]), max: 200000
         public Byte[] photo;
         
         public stuffProxy(String shipclass, Int32? shiprank, List<String> workers, List<String> officers, Int32 workerSalary, Byte[] photo)
@@ -157,31 +157,31 @@ namespace Generated
     public class ShipInfoProxy
     {
         
-        // name: shipclass(String), min: 0, max: 255, def: 
+        // keyname: shipclass(String), min: 0, max: 255, def: 
         public String shipclass;
         
-        // name: shiprank(Int32), min: 0, max: 1005000, def: 5
+        // keyname: shiprank(Int32), min: 0, max: 1005000, def: 5
         public Int32? shiprank;
         
-        // name: Classification(Classification)
+        // keyname: Classification(Classification)
         public Classification Classification;
         
-        // name: Name(String), min: 0, max: 255, def: ShipName
+        // keyname: Name(String), min: 0, max: 255, def: ShipName
         public String Name;
         
-        // name: captains(List<name: captainContact(Contact)>), min: 0, max: 100
+        // valname: captains(List<name: captainContact(Contact)>), min: 0, max: 100
         public List<Contact> captains;
         
-        // name: workers(List<name: (String), min: 0, max: 255, def: 0>), min: 0, max: 100
+        // valname: workers(List<name: (String), min: 0, max: 255, def: 0>), min: 0, max: 100
         public List<String> workers;
         
-        // name: officers(List<name: (String), min: 0, max: 255, def: 0>), min: 0, max: 100
+        // valname: officers(List<name: (String), min: 0, max: 255, def: 0>), min: 0, max: 100
         public List<String> officers;
         
-        // name: workerSalary(Int32), min: 1, max: 2000, def: 0
+        // valname: workerSalary(Int32), min: 1, max: 2000, def: 0
         public Int32 workerSalary;
         
-        // name: photo(byte[]), max: 200000
+        // valname: photo(byte[]), max: 200000
         public Byte[] photo;
         
         public ShipInfoProxy(String shipclass, Int32? shiprank, Classification Classification, String Name, List<Contact> captains, List<String> workers, List<String> officers, Int32 workerSalary, Byte[] photo)
@@ -251,22 +251,22 @@ namespace Generated
     public class TestEntityProxy
     {
         
-        // name: shipclass(String), min: 0, max: 255, def: 
+        // keyname: shipclass(String), min: 0, max: 255, def: 
         public String shipclass;
         
-        // name: shiprank(Int32), min: 0, max: 1005000, def: 5
+        // keyname: shiprank(Int32), min: 0, max: 1005000, def: 5
         public Int32? shiprank;
         
-        // name: Classification(Classification)
+        // keyname: Classification(Classification)
         public Classification Classification;
         
-        // name: Name(String), min: 0, max: 255, def: ShipName
+        // keyname: Name(String), min: 0, max: 255, def: ShipName
         public String Name;
         
-        // name: SubClassification(Classification)
+        // keyname: SubClassification(Classification)
         public Classification SubClassification;
         
-        // name: TestIntVal(Int32), min: 0, max: 1005000, def: 5
+        // valname: TestIntVal(Int32), min: 0, max: 1005000, def: 5
         public Int32 TestIntVal;
         
         public TestEntityProxy(String shipclass, Int32? shiprank, Classification Classification, String Name, Classification SubClassification, Int32 TestIntVal)

@@ -8,7 +8,7 @@
 
 Важно! Прежде чем запускать SimpleCRUDexapmle убедитесь что у вас свободны глобалы WowsCrud и WowsCrudMeta (мало ли), так как они перезапишутся приложением; SpeedTest_Save — перезапишет wowsTest и wowsTestMeta.
 
-Привет leonmyk.
+Привет Algotradesoft.
 
 Изучаем, пользуемся, делимся, коментим.
 Статья на хабре: https://habrahabr.ru/post/306310/

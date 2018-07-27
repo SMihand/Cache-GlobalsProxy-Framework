@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.txtinfo = new System.Windows.Forms.TextBox();
             this.treeView = new System.Windows.Forms.TreeView();
             this.dataGridView = new System.Windows.Forms.DataGridView();
@@ -84,8 +84,8 @@
             // Values
             // 
             this.Values.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.TopCenter;
-            this.Values.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.TopCenter;
+            this.Values.DefaultCellStyle = dataGridViewCellStyle1;
             this.Values.HeaderText = "Values";
             this.Values.Name = "Values";
             // 

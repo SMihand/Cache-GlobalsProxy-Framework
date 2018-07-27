@@ -1,28 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheExtremeProxy", "CacheExtremeProxy\CacheExtremeProxy.csproj", "{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}"
-	ProjectSection(ProjectDependencies) = postProject
-		{AAD38F1A-0E2B-4F14-B484-A980ADE40281} = {AAD38F1A-0E2B-4F14-B484-A980ADE40281}
-		{2540F31D-9D9E-4ACB-B102-ADC05014ECEA} = {2540F31D-9D9E-4ACB-B102-ADC05014ECEA}
-		{E304A36A-2099-453C-9DF3-F620930CC815} = {E304A36A-2099-453C-9DF3-F620930CC815}
-	EndProjectSection
-EndProject
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2010
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaEditor", "MetaEditor\MetaEditor.csproj", "{678CB137-1F66-4A75-A59B-6AC3FACF9AC7}"
-	ProjectSection(ProjectDependencies) = postProject
-		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1} = {D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCRUDexample", "SimpleCRUDexample\SimpleCRUDexample.csproj", "{7892AAE4-0F14-459D-91A9-7EEAEE203C67}"
-	ProjectSection(ProjectDependencies) = postProject
-		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1} = {D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeedTest_Save", "SpeedTest_Save\SpeedTest_Save.csproj", "{2540F31D-9D9E-4ACB-B102-ADC05014ECEA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GlobalViewerTests", "GlobalViewer\GlobalViewerTests.csproj", "{E304A36A-2099-453C-9DF3-F620930CC815}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUTTests", "DUTTests\DUTTests.csproj", "{AAD38F1A-0E2B-4F14-B484-A980ADE40281}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CacheExtremeProxy", "CacheExtremeProxy\CacheExtremeProxy.csproj", "{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,10 +19,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{678CB137-1F66-4A75-A59B-6AC3FACF9AC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{678CB137-1F66-4A75-A59B-6AC3FACF9AC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{678CB137-1F66-4A75-A59B-6AC3FACF9AC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -50,15 +35,16 @@ Global
 		{E304A36A-2099-453C-9DF3-F620930CC815}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E304A36A-2099-453C-9DF3-F620930CC815}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E304A36A-2099-453C-9DF3-F620930CC815}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AAD38F1A-0E2B-4F14-B484-A980ADE40281}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AAD38F1A-0E2B-4F14-B484-A980ADE40281}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AAD38F1A-0E2B-4F14-B484-A980ADE40281}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AAD38F1A-0E2B-4F14-B484-A980ADE40281}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3C9A20C-3941-4AAB-A622-14EAE8ED94E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A83B60B8-2E5F-46E2-A4A4-F7D6C1B8F771}
 		VisualSVNWorkingCopyRoot = .
 	EndGlobalSection
 EndGlobal

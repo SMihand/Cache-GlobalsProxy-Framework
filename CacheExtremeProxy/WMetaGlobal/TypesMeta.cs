@@ -838,6 +838,6 @@ namespace CacheEXTREME2.WMetaGlobal
 
         public FieldInfo[] structFields;
 
-        public List<ValueMeta> elementsMeta;
+        public List<ValueMeta> elementsMeta = new List<ValueMeta>();
     }
 }

@@ -30,31 +30,34 @@ namespace MetaCache_v3.EditForms
 
         private void ValueEditForm_Load(object sender, EventArgs e)
         {
-            comboBox1.SelectedIndex = getMetaType(subMeta);
-            switch (comboBox1.SelectedIndex)
+            if (subMeta != null)
             {
-                //String,Int,Double,struct
-                case (0):
-                    textBox2.Text = ((StringValMeta)(subMeta)).MinLenght.ToString();
-                    textBox3.Text = ((StringValMeta)(subMeta)).MaxLength.ToString();
-                    textBox4.Text = ((StringValMeta)subMeta).GetDefaultValue().ToString();
-                    break;
-                case (1):
-                    textBox2.Text = ((IntValMeta)(subMeta)).Minimum.ToString();
-                    textBox3.Text = ((IntValMeta)(subMeta)).Maximum.ToString();
-                    textBox4.Text = ((IntValMeta)subMeta).GetDefaultValue().ToString();
-                    break;
-                case (2):
-                    textBox2.Text = ((DoubleValMeta)(subMeta)).Minimum.ToString();
-                    textBox3.Text = ((DoubleValMeta)(subMeta)).Maximum.ToString();
-                    textBox4.Text = ((DoubleValMeta)subMeta).GetDefaultValue().ToString();
-                    break;
-                case (3):
-                    textBox2.Enabled = false;
-                    textBox3.Enabled = false;
-                    textBox4.Enabled = false;
-                    textBox4.Text = ((StructValMeta)subMeta).GetCSharpTypeName();
-                    break;
+                comboBox1.SelectedIndex = getMetaType(subMeta);
+                switch (comboBox1.SelectedIndex)
+                {
+                    //String,Int,Double,struct
+                    case (0):
+                        textBox2.Text = ((StringValMeta)(subMeta)).MinLenght.ToString();
+                        textBox3.Text = ((StringValMeta)(subMeta)).MaxLength.ToString();
+                        textBox4.Text = ((StringValMeta)subMeta).GetDefaultValue().ToString();
+                        break;
+                    case (1):
+                        textBox2.Text = ((IntValMeta)(subMeta)).Minimum.ToString();
+                        textBox3.Text = ((IntValMeta)(subMeta)).Maximum.ToString();
+                        textBox4.Text = ((IntValMeta)subMeta).GetDefaultValue().ToString();
+                        break;
+                    case (2):
+                        textBox2.Text = ((DoubleValMeta)(subMeta)).Minimum.ToString();
+                        textBox3.Text = ((DoubleValMeta)(subMeta)).Maximum.ToString();
+                        textBox4.Text = ((DoubleValMeta)subMeta).GetDefaultValue().ToString();
+                        break;
+                    case (3):
+                        textBox2.Enabled = false;
+                        textBox3.Enabled = false;
+                        textBox4.Enabled = false;
+                        textBox4.Text = ((StructValMeta)subMeta).GetCSharpTypeName();
+                        break;
+                }
             }
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
         }

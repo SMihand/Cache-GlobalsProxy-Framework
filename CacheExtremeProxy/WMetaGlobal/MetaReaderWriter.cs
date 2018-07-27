@@ -97,6 +97,7 @@ namespace CacheEXTREME2.WMetaGlobal
             metaGlob.Reset();
             //
             //^nMeta 	= 	(«n», «Navies») 
+            ArrayList globalInfoTry = metaGlob.TryGetValues();
             ArrayList globalInfo = metaGlob.GetValues(str_str_pattern);
             gm.GlobalName = (string)globalInfo[0];
             gm.GlobalSemantic = (string)globalInfo[1];

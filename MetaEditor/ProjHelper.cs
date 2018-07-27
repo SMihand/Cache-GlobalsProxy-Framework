@@ -142,22 +142,25 @@ namespace MetaCache_v3
         public void CreateMetaGlob(string DataGlobName)
         {
             NodeReference node = _myConn.CreateNodeReference(DataGlobName + _MetaSufix);
-            node.Set(DataGlobName);
-            ValueList myList = _myConn.CreateList();
+            ValueList globRootInfo = _myConn.CreateList();
+            globRootInfo.Append(DataGlobName);
+            globRootInfo.Append(DataGlobName + _MetaSufix);
+            node.Set(globRootInfo);
+            globRootInfo.Close();
 
-            myList.Append(0);
-            myList.Append(DataGlobName+"Meta");           
+            ValueList indexesInfo = _myConn.CreateList();
+            indexesInfo.Append(0);
             node.SetSubscript(1, "Indexes");
-            node.SetSubscript(2, 0);
-            node.Set(myList);
-            myList.Clear();
-            //
-            node.SetSubscriptCount(0);
-            myList.Append(0);
-            node.SetSubscript(1, "Structs");
-            node.Set(myList);
+            node.Set(indexesInfo);
+            indexesInfo.Close();
 
-            myList.Close();
+            ValueList structsInfo = _myConn.CreateList();
+
+            node.SetSubscriptCount(0);
+            structsInfo.Append(0);
+            node.SetSubscript(1, "Structs");
+            node.Set(structsInfo);
+            structsInfo.Close();
 
         }
         /// <summary>

@@ -321,15 +321,17 @@ namespace CacheEXTREME2.WProxyGlobal
                 keys.Add(keyValue);
             }
             globalRef.Reset();
-            treeWalkForEntities(globalRef, keys, entities);
+            int count = 0;
+            treeWalkForEntities(globalRef, keys, entities,ref count, 0);
             return entities;
         }
-        public List<ProxyT> GetByKeyMask(ProxyKeyT key)
+        public List<ProxyT> GetByKeyMask(ProxyKeyT key, int count = 0)
         {
             List<ProxyT> entities = new List<ProxyT>();
             ArrayList serializedKey = newProxyKeyTSerializer.SerializeKeysPart(key);
             globalRef.Reset();
-            treeWalkForEntities(globalRef, serializedKey, entities);
+            int countF = 0;
+            treeWalkForEntities(globalRef, serializedKey, entities, ref countF, count);
             return entities;
         }
         public List<ProxyT> GetAll()
@@ -411,7 +413,7 @@ namespace CacheEXTREME2.WProxyGlobal
                 }
             }
         }
-        private void treeWalkForEntities(TrueNodeReference glNode, ArrayList baseSubscripts, List<ProxyT> entities)
+        private void treeWalkForEntities(TrueNodeReference glNode, ArrayList baseSubscripts, List<ProxyT> entities, ref int count, int maxCount)
         {
             glNode.AppendSubscript("");
             if (baseSubscripts[glNode.SubsCount - 1] != null)
@@ -423,11 +425,16 @@ namespace CacheEXTREME2.WProxyGlobal
                     {
                         if (glNode.HasValues())
                         {
+                            count++;
                             entities.Add(CreateEntity(glNode.GetSubscripts(), glNode.GetValues(meta.ValuesMeta)));
                         }
                         return;
                     }
-                    treeWalkForEntities(glNode, baseSubscripts, entities);
+                    if (maxCount != 0 && count >= maxCount)
+                    {
+                        return;
+                    }
+                    treeWalkForEntities(glNode, baseSubscripts, entities, ref count, maxCount);
                     glNode.GoParentNodeSubscripts();
                     return;
                 }
@@ -437,12 +444,17 @@ namespace CacheEXTREME2.WProxyGlobal
                 glNode.GoNextSubscript();
                 if (glNode.SubsCount == baseSubscripts.Count && glNode.HasValues())
                 {
+                    count++;
                     entities.Add(CreateEntity(glNode.GetSubscripts(), glNode.GetValues(meta.ValuesMeta)));
                     continue;
                 }
                 if (glNode.SubsCount < baseSubscripts.Count && glNode.HasSubnodes())
                 {
-                    treeWalkForEntities(glNode, baseSubscripts, entities);
+                    if (maxCount != 0 && count >= maxCount)
+                    {
+                        return;
+                    }
+                    treeWalkForEntities(glNode, baseSubscripts, entities, ref count, maxCount);
                     glNode.GoParentNodeSubscripts();
                 }
             }

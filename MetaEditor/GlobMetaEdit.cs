@@ -111,15 +111,16 @@ namespace MetaCache_v3
 
         private void btnDeleteSub_Click(object sender, EventArgs e)
         {
-            if(subIndex >= 0 && subIndex < globalMeta.KeysCount)
+            if(subIndex >= 0 && subIndex <= globalMeta.KeysCount)
             {
                 DialogResult dr = MessageBox.Show(
                     "Deleting subscript: " + globalMeta[subIndex - 1].ToString() 
                         + " will delete all node meta"
                     , "Deleting index"
                     , MessageBoxButtons.YesNoCancel);
-                if (dr == DialogResult.OK)
+                if (dr == DialogResult.Yes)
                 {
+                    SubListBox.Items.RemoveAt(subIndex - 1);
                     globalMeta.RemoveKey(subIndex - 1);
                     ValListBox.Text = "";                    
                 }
@@ -169,7 +170,7 @@ namespace MetaCache_v3
             {
                 DialogResult dr = MessageBox.Show(globalMeta[subIndex - 1, ValListBox.SelectedIndex].ToString()
                     , "Deleting operation", MessageBoxButtons.YesNoCancel);
-                if(dr == DialogResult.OK)
+                if(dr == DialogResult.Yes)
                 {
                     globalMeta.DeleteValueMeta(subIndex - 1, ValListBox.SelectedIndex);
                 }

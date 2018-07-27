@@ -53,24 +53,28 @@ namespace CacheEXTREMELab
                 }
                 if (conn.IsConnected())
                 {
-                    //tests();
-                    txtinfo.Text = "З’єднання з БД виконано " + _namespace;
-                    GlobalsDirectory dir = conn.CreateGlobalsDirectory();
-                    string global = _globalName; cmbGlobals.Items.Clear();
-                    do
-                    {
-                        global = dir.NextGlobalName();
-                        cmbGlobals.Items.Add(global);
-                    } while (!global.Equals(string.Empty));
-                    cmbGlobals.Enabled = true;
-                    cmbGlobals.BackColor = Color.White;
-                    return;
                 }
-                throw new Exception("Something wrong while connecting.");
+                else
+                {
+                    conn = ConnectionContext.GetConnection();
+                    conn.Connect(_namespace, _user, _password);
+                }
+                //tests();
+                txtinfo.Text = "З’єднання з БД виконано " + _namespace;
+                GlobalsDirectory dir = conn.CreateGlobalsDirectory();
+                string global = _globalName; cmbGlobals.Items.Clear();
+                do
+                {
+                    global = dir.NextGlobalName();
+                    cmbGlobals.Items.Add(global);
+                } while (!global.Equals(string.Empty));
+                cmbGlobals.Enabled = true;
+                cmbGlobals.BackColor = Color.White;
+                return;
             }
             catch (Exception ex)
             {
-                txtinfo.Text = ex.Message;
+                txtinfo.Text = "Something wrong while connecting. ex:"+ ex.Message;
                 conn.Close();
             }
         }
@@ -291,7 +295,8 @@ namespace CacheEXTREMELab
             {
                 string globalToDeleteName = this.cmbGlobals.Text;
                 NodeReference nr = this.conn.CreateNodeReference(globalToDeleteName);
-                if (DialogResult.OK == MessageBox.Show("Do you realy want to kill global: " + nodeRef.GlobalName, "Warning!", MessageBoxButtons.YesNoCancel))
+                DialogResult dr = MessageBox.Show("Do you realy want to kill global: " + globalToDeleteName, "Warning!", MessageBoxButtons.YesNoCancel);
+                if (DialogResult.Yes == dr)
                 {
                     nr.Kill();
                 }
@@ -308,7 +313,7 @@ namespace CacheEXTREMELab
         {
             try
             {
-                if (DialogResult.OK == MessageBox.Show("Do you realy want to kill: " + nodeRef.ToString(), "Warning!", MessageBoxButtons.YesNoCancel))
+                if (DialogResult.Yes == MessageBox.Show("Do you realy want to kill: " + nodeRef.ToString(), "Warning!", MessageBoxButtons.YesNoCancel))
                 {
                     nodeRef.Kill();
                 }

@@ -545,7 +545,7 @@ namespace CacheEXTREME2.WMetaGlobal
         //
         public List<ValueMeta> GetKeysMeta(int keysCount)
         {
-            if (keysCount > 0 && keysCount <= this.KeysCount)
+            if (keysCount >= 0 && keysCount <= this.KeysCount)
             {
                 List<ValueMeta> keysMetaToReturn = new List<ValueMeta>();
                 for (int i = 0; i < keysCount; i++)

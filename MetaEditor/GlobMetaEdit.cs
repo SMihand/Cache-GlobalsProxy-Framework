@@ -10,6 +10,8 @@ using InterSystems.Globals;
 using CacheEXTREME2.WMetaGlobal;
 using MetaCache_v3.EditForms;
 using MetaCache_v3.helpclass;
+using CacheEXTREME2.WDirectGlobal;
+using System.Collections;
 
 namespace MetaCache_v3
 {
@@ -61,8 +63,8 @@ namespace MetaCache_v3
             Text = _globName;
             // проверка на существование такого глобала, загрузка его
             if (_conn.CreateNodeReference(_globName).HasData())
-            { 
-                globalMeta = MRW.GetMeta(_globName); 
+            {
+                globalMeta = MRW.GetMeta(_globName);
             }
             foreach (ValueMeta vv in globalMeta.GetKeysMeta(globalMeta.KeysCount))
             {
@@ -111,10 +113,10 @@ namespace MetaCache_v3
 
         private void btnDeleteSub_Click(object sender, EventArgs e)
         {
-            if(subIndex >= 0 && subIndex <= globalMeta.KeysCount)
+            if (subIndex >= 0 && subIndex <= globalMeta.KeysCount)
             {
                 DialogResult dr = MessageBox.Show(
-                    "Deleting subscript: " + globalMeta[subIndex - 1].ToString() 
+                    "Deleting subscript: " + globalMeta[subIndex - 1].ToString()
                         + " will delete all node meta"
                     , "Deleting index"
                     , MessageBoxButtons.YesNoCancel);
@@ -122,7 +124,7 @@ namespace MetaCache_v3
                 {
                     SubListBox.Items.RemoveAt(subIndex - 1);
                     globalMeta.RemoveKey(subIndex - 1);
-                    ValListBox.Text = "";                    
+                    ValListBox.Text = "";
                 }
             }
         }
@@ -134,7 +136,7 @@ namespace MetaCache_v3
             /// ОСТОРОЖНО ХАК!!
             SubscriptEditForm newSubscript = new SubscriptEditForm(vm,
                 // передаем параметры VM описанние из МС. Если нет такого - заполняем  пустым. а почему его нету это уже вопрос.
-                (globalMeta.GetNodeMeta(subIndex-1).Value.Count == 0) ? "" : globalMeta[subIndex-1, 0].SemanticName);
+                (globalMeta.GetNodeMeta(subIndex - 1).Value.Count == 0) ? "" : globalMeta[subIndex - 1, 0].SemanticName);
             newSubscript.StructVal = structs;
             newSubscript.ShowDialog();
 
@@ -170,7 +172,7 @@ namespace MetaCache_v3
             {
                 DialogResult dr = MessageBox.Show(globalMeta[subIndex - 1, ValListBox.SelectedIndex].ToString()
                     , "Deleting operation", MessageBoxButtons.YesNoCancel);
-                if(dr == DialogResult.Yes)
+                if (dr == DialogResult.Yes)
                 {
                     globalMeta.DeleteValueMeta(subIndex - 1, ValListBox.SelectedIndex);
                 }
@@ -361,7 +363,7 @@ namespace MetaCache_v3
                 globalMeta.EditStruct(edited.StructTypeName, edited);
                 //vvv   old version   vvv
                 //globalMeta.GetStruct(StructListBox.SelectedItem.ToString()).elementsMeta.Insert(StructElemListBox1.SelectedIndex, vm);
-                
+
                 StructElemListBox1.Items[StructElemListBox1.SelectedIndex] = (vm.ToString());
             }
             newValue.Close();
@@ -408,7 +410,7 @@ namespace MetaCache_v3
             if (StructElemListBox1.SelectedIndex >= 0 && StructElemListBox1.SelectedIndex < globalMeta.GetStructDefinition(StructListBox.SelectedItem.ToString()).elementsMeta.Count)
             {
                 StructDefinition edited = globalMeta.GetStructDefinition(StructListBox.SelectedItem.ToString());
-                DialogResult dr = MessageBox.Show(edited.elementsMeta[StructElemListBox1.SelectedIndex].SemanticName 
+                DialogResult dr = MessageBox.Show(edited.elementsMeta[StructElemListBox1.SelectedIndex].SemanticName
                         + " from " + StructListBox.SelectedItem.ToString()
                     , "Deleting operation", MessageBoxButtons.YesNoCancel);
                 if (dr == DialogResult.OK)
@@ -418,6 +420,73 @@ namespace MetaCache_v3
                 }
 
             }
+        }
+
+        private void exportMetaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TrueNodeReference globToExport = new TrueNodeReference(_conn, _globName);
+            List<string> globalSerializedList = new List<string>();
+            treeWalkForSerialize(globToExport, globalSerializedList);
+        }
+
+        private void treeWalkForSerialize(TrueNodeReference glNode, List<string> serializedList)
+        {
+            glNode.AppendSubscript("");
+
+            while (glNode.NextSubscript() != "")
+            {
+                glNode.GoNextSubscript();
+                if (glNode.HasSubnodes())
+                {
+                    treeWalkForSerialize(glNode, serializedList);
+                    glNode.GoParentNodeSubscripts();
+                }
+                if (glNode.HasValues())
+                {
+                    string keys = SerializeKeys(glNode.GetSubscripts());
+
+                    serializedList.Add(keys);
+                }
+            }
+        }
+
+        private string SerializeKeys(ArrayList Keys)
+        {
+            StringBuilder sb = new StringBuilder(1000);
+            foreach (var item in keys)
+            {
+                sb.Append(item.ToString()+",");
+            }
+            return sb.ToString();
+        }
+
+        private string SerializeValue(object value)
+        {
+            StringBuilder sb = new StringBuilder(1500);
+            if(value is ValueList)
+            {
+
+            }
+            return sb.ToString();
+        }
+
+        private string SerializeValueList(ValueList list)
+        {
+            StringBuilder sb = new StringBuilder(1000);
+            sb.Append("{");
+            foreach (var item in list.GetAll())
+            {
+                if(item is ValueList)
+                {
+                    sb.Append("{" + SerializeValueList(item as ValueList) + "}");
+                }
+                else
+                {
+                    sb.Append(item.ToString());
+                }
+            }
+            sb.Append("}");
+            return sb.ToString();
         }
     }
 }
